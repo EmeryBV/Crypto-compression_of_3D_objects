@@ -1,16 +1,17 @@
-# This is a sample Python script.
+import Compression
+import sys
 
-# Press Maj+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def create_compress_file(filename):
+    file = open(filename ,"x")
+    return file
 
 
-# Press the green button in the gutter to run the script.
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    filename = "compressMesh"
+    file = create_compress_file(filename)
+    file.write("test")
+    Compression.Procedure_EncoreConnectivity(filename)
+
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
