@@ -7,5 +7,18 @@ class ActiveList:
     def add(self, vertex):
         self.vertexList.append(self, vertex)
 
-    def isIn(self, vertex):
-        return  vertex in self.vertexList
+    def contains(self, vertex):
+        return vertex in self.vertexList
+
+    def empty(self):
+        return len(self.vertexList) == 0
+
+    def split(self, edge):
+        AL1 = []
+        AL1.append(edge)
+
+    def merge(self, AL1, vertex):
+        self.vertexList += AL1
+
+    def removeFullVertices(self):
+        self.vertexList.clear()
