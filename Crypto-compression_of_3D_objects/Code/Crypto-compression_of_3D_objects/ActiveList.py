@@ -13,9 +13,9 @@ class ActiveList:
     def empty(self):
         return len(self.vertexList) == 0
 
-    def split(self, edge):
-        AL1 = []
-        AL1.append(edge)
+    def split(self ,edge):
+        ALBis = ActiveList()
+        return ALBis.append(edge)
 
     def merge(self, AL1, vertex):
         self.vertexList += AL1

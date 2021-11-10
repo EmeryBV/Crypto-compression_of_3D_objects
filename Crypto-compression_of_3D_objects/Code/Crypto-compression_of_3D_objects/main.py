@@ -9,7 +9,7 @@ if __name__ == '__main__':
     filename = "compressMesh"
     file = create_compress_file(filename)
     file.write("test")
-    Compression.procedureEncoreConnectivity(filename)
+    Compression.EncoreConnectivity(filename)
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
