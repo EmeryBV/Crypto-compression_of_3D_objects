@@ -5,8 +5,6 @@ def create_compress_file(filename):
     file = open(filename ,"x")
     return file
 
-
-
 if __name__ == '__main__':
     filename = "compressMesh"
     file = create_compress_file(filename)
