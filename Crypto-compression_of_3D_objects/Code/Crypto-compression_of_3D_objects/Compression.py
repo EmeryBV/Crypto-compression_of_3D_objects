@@ -16,7 +16,7 @@ class Compression:
         self.triangles = faces
 
     def getStartTriangle(self):
-        return self.triangles[random.randint(0, len(self.triangles))]
+        return self.triangles[random.randint(0, len(self.triangles) - 1)]
 
     def EncodeConnectivity(self, filename):
         file = open(filename, "w")
@@ -35,9 +35,7 @@ class Compression:
         while (self.stack):
             AL = np.stack.pop()
             while (AL):
-                # TODO: assigner à la variable e la prochaine arrete libre (nextFreeEdge() )
                 u = vertexFocus.nextFreeEdge()  # A MODIFIER
-                # TODO: assigner à la variable u le vertice assigné à la variable e (neighboringVertex() )
                 # u = Vertex(0, 0)  # A MODIFIER
                 if u.isEncoded():
                     AL.add(u)

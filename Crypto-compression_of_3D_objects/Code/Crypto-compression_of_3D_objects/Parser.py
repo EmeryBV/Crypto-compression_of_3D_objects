@@ -27,22 +27,23 @@ def sortNeighbors(vertex, vertices, neighbors):
 
 
 def readMesh(file):
-    mesh = o3d.io.read_triangle_mesh(file)
+    trimesh.util.attach_to_log()
+    mesh = trimesh.load( file )
 
     meshVertices = np.asarray(mesh.vertices)
-    meshTriangles = np.asarray(mesh.triangles)
+    meshTriangles = np.asarray(mesh.faces)
+
     neighbors = {}
-    for i in range(0, len(meshVertices) ):
+    for i in range(0, len(meshVertices)):
         neighbors[i] = sortNeighbors(i, meshVertices, getNeighbors(i, meshTriangles))
 
     vertices = []
-    for i in range( 0, len(meshVertices) ):
-        vertices.append( Vertex( i, meshVertices[i], neighbors[i] ) )
+    for i in range(0, len(meshVertices)):
+        vertices.append(Vertex(i, meshVertices[i], neighbors[i]))
 
     faces = []
-    for i in range( 0, len( meshTriangles )):
+    for i in range(0, len(meshTriangles)):
         face = meshTriangles[i]
-        faces.append( Face ( [ vertices[face[0]], vertices[face[1]], vertices[face[2]] ] ))
+        faces.append(Face([vertices[face[0]], vertices[face[1]], vertices[face[2]]]))
 
     return vertices, faces
-

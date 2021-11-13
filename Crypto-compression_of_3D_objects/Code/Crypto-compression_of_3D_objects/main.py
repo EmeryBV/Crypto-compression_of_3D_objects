@@ -13,7 +13,7 @@ if __name__ == '__main__':
     filename = "compressMesh"
     file = create_compress_file(filename)
     file.write("test")
-    meshFile = "./Mesh/OBJ/sphere.obj"
+    meshFile = "./Mesh/OBJ/simpleShape.obj"
     vertices, faces = readMesh(meshFile)
     compression = Compression( vertices, faces)
     compression.EncodeConnectivity(filename)

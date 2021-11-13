@@ -26,5 +26,4 @@ class Vertex:
         for n in self.neighbors:
             if not n.isEncoded():
                 return n
-
     # def neighboringVertex(self,edge):

@@ -1,0 +1,63 @@
+# Blender OBJ File: /home/william/Documents/Blender/sphere.obj
+
+# www.blender.org
+
+mtllib sphere.mtl
+
+o Sphere_Sphere
+
+v -5.0 -4.5 0.0
+
+v 0.0 0.0 0.0
+
+v 10.0 0.0 0.0
+
+v 15.0 -4.5 0.0
+
+v 0.0 -5.0 0.0 
+
+v 10.0 -5.0 0.0
+
+v 5.0 -7.5 0.0
+
+v 4.5 -8.0 0.0
+
+v 5.5 -8.0 0.0
+
+v 5.0 -12.5 0.0
+
+v 0.0 -15.0 0.0
+
+v 10.0 -15.0 0.0
+
+f 2 1 5
+
+f 3 2 5
+
+f 3 5 6
+
+f 4 3 6
+
+f 6 5 7
+
+f 7 5 8
+
+f 6 7 9
+
+f 7 8 9
+
+f 9 8 10
+
+f 8 5 10
+
+f 6 9 10
+
+f 10 5 11
+
+f 6 10 12
+
+f 10 11 12
+
+f 5 1 11
+
+f 4 6 12
