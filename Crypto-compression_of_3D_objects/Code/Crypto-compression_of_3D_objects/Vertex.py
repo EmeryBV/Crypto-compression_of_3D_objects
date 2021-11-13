@@ -1,6 +1,7 @@
 class Vertex:
 
-    def __init__(self, position, degree):
+    def __init__(self, index, position, neighbors):
+        self.index = index
         self.position = position
         self.neighbors = neighbors
         self.valence = len(self.neighbors)

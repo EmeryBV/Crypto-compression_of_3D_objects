@@ -21,35 +21,37 @@ class Compression:
     def EncodeConnectivity(self, filename):
         file = open(filename, "w")
         start = self.getStartTriangle()
+        startVertices = start.vertices
 
         AL = ActiveList(start)
         # AL1 = ActiveList()
-        start[0].encode(filename, "add")
-        start[1].encode(filename, "add")
-        start[2].encode(filename, "add")
+        self.encode(filename, "add", startVertices[0].valence)
+        self.encode(filename, "add", startVertices[1].valence)
+        self.encode(filename, "add", startVertices[2].valence)
 
-        vertexFocus = start[0]
+        vertexFocus = startVertices[random.randint(0, 2)]
         vertexFocus.setFocus(True)
 
         self.stack.append(AL)
         while (self.stack):
-            AL = np.stack.pop()
+            AL = self.stack.pop()
             while (AL):
                 u = vertexFocus.nextFreeEdge()  # A MODIFIER
                 # u = Vertex(0, 0)  # A MODIFIER
                 if u.isEncoded():
                     AL.add(u)
-                    Vertex.encode(filename, "add", str("u.degree"))
+                    self.encode(filename, "add", str(u.valence))
                     u.encode()
                 elif AL.contains(u):
                     self.stack.append(AL.split(u))
-                    Vertex.encode("split", str(AL.getOffset(u)))
+                    self.encode(filename, "split", str(AL.getOffset(u)))
                 else:
                     for i in range(len(self.stack)):
                         if self.stack[i].contains(u):
                             AL.merge(self.stack[i], u)
                             self.stack.remove(i)
-                            Vertex.encode(filename, "merge", str(i) + " " + str(AL.getOffset(u)))
+                            self.encode(filename, "merge", str(i), str(AL.getOffset(u)))
+
                 AL.removeFullVertices()
                 if vertexFocus.isFull():
                     for vertexNeighbor in range(len(start[0].neighbors)):
@@ -68,3 +70,15 @@ class Compression:
     def prediction(self, vPosition, uPosition, wPosition):
         rPosition = vPosition + uPosition - wPosition
         return rPosition
+
+    def encode(self, filename, instruction, valence=None, offset=None, index=None):
+        file = open(filename, "w")
+
+        if instruction == "add":
+            line = " ".join([instruction, str(valence)])
+        elif instruction == "split":
+            line = " ".join([instruction, str(offset)])
+        else:
+            line = " ".join([instruction, str(index), str(offset)])
+
+        file.write(line + "\n")

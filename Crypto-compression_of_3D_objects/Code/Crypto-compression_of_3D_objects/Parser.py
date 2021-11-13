@@ -1,13 +1,17 @@
 import math
 import numpy as np
-import open3d as o3d
+
+import trimesh
+
+from Vertex import Vertex
+from Face import Face
 
 
 def getNeighbors(vertex, faces):
     neighbors = set()
     for l in faces:
         if vertex in l:
-            neighbors.union(set(v for v in l if v != vertex))
+            set.union(neighbors, set(v for v in l if v != vertex
     return neighbors
 
 

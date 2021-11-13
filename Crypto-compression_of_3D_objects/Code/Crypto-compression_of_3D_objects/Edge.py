@@ -1,6 +1,11 @@
 class Edge:
 
-    def __init__(self, v1, v2):
-        self.v1 = v1
-        self.v2 = v2
+    def __init__(self, vertices ):
+        self.vertices = vertices
+        self.encoded = False
+
+    def isEncoded( self ):
+        return self.encoded
+
+
 
