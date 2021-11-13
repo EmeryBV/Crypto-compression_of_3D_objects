@@ -2,10 +2,13 @@ class Vertex:
 
     def __init__(self, position, degree):
         self.position = position
-        self.degre = degree
+        self.neighbors = neighbors
+        self.valence = len(self.neighbors)
         self.focusVertex = False
         self.encoded = False
-        self.neighbors = []
+
+    def setFocus(self, state):
+        self.focusVertex = state
 
     def encode(self):
         self.encoded = True
@@ -25,4 +28,3 @@ class Vertex:
                 return n
 
     # def neighboringVertex(self,edge):
-
