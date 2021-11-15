@@ -11,8 +11,8 @@ def getNeighbors(vertex, faces):
     neighbors = set()
     for l in faces:
         if vertex in l:
-            set.union(neighbors, set(v for v in l if v != vertex
-            print(neighbors)
+            neighbors = set.union(neighbors, set(v for v in l if v != vertex))
+    print(neighbors)
     return neighbors
 
 
@@ -26,7 +26,7 @@ def sortNeighbors(vertex, vertices, neighbors):
         nPos = vertices[n]
         vec = np.subtract(nPos,vertexPos)
         normalizedVec = vec / np.linalg.norm(vec)
-        angles[n] = math.acos(np.dot(upVector, normalizedVec)) * 180. / np.pi
+        angles[n] = math.acos(np.dot(upVector, normalizedVec))
 
     sortedNeighbors = {k: v for k, v in sorted(angles.items(), key=lambda item: item[1], reverse=False)}
     print( vertex, vertices[vertex], len(sortedNeighbors), sortedNeighbors )

@@ -14,8 +14,9 @@ if __name__ == '__main__':
     file.write("test")
     meshFile = "./Mesh/OBJ/simpleShape.obj"
     vertices, faces = readMesh(meshFile)
-    #compression = Compression( vertices, faces)
-    #compression.EncodeConnectivity(filename)
+    decompression = Decompression()
+    # compression = Compression( vertices, faces)
+    # compression.EncodeConnectivity(filename)
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

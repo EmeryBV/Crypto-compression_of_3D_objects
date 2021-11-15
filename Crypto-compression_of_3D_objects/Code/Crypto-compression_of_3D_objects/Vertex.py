@@ -23,8 +23,5 @@ class Vertex:
                 return False
         return True
 
-    def nextFreeEdge(self):
-        for n in self.neighbors:
-            if not n.isEncoded():
-                return n
+
     # def neighboringVertex(self,edge):

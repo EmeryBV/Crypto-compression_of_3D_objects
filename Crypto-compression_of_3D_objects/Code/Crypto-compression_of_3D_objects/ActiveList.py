@@ -2,7 +2,11 @@ class ActiveList:
 
     def __init__(self, vertexList):
         self.vertexList = vertexList
-        self.focusVertex = 0
+        self.focusVertex = None
+
+    def __init__(self):
+        self.vertexList = []
+        self.focusVertex = None
 
     def add(self, vertex):
         self.vertexList.append(self, vertex)
@@ -41,3 +45,9 @@ class ActiveList:
                 self.vertexList.remove(vertex)
 
         self.focusVertex = self.vertexList[0]
+
+    def nextFreeEdge(self):
+        for n in self.focusVertex.neighbors:
+            # print("here" + str(n))
+            if not n.isEncoded():
+                return n

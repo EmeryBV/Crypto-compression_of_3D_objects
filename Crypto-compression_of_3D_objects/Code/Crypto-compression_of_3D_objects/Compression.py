@@ -29,14 +29,16 @@ class Compression:
         self.encode(filename, "add", startVertices[1].valence)
         self.encode(filename, "add", startVertices[2].valence)
 
-        vertexFocus = startVertices[random.randint(0, 2)]
-        vertexFocus.setFocus(True)
+        AL.focusVertex = startVertices[random.randint(0, 2)]
+
+        # vertexFocus = startVertices[random.randint(0, 2)]
+        # vertexFocus.setFocus(True)
 
         self.stack.append(AL)
         while (self.stack):
             AL = self.stack.pop()
             while (AL):
-                u = vertexFocus.nextFreeEdge()  # A MODIFIER
+                u = AL.nextFreeEdge()  # A MODIFIER
                 # u = Vertex(0, 0)  # A MODIFIER
                 if u.isEncoded():
                     AL.add(u)
@@ -53,18 +55,18 @@ class Compression:
                             self.encode(filename, "merge", str(i), str(AL.getOffset(u)))
 
                 AL.removeFullVertices()
-                if vertexFocus.isFull():
-                    for vertexNeighbor in range(len(start[0].neighbors)):
+                if  AL.focusVertex.isFull():
+                    for vertexNeighbor in range(len(AL.focusVertex.neighbors)):
                         if not vertexNeighbor.isFull():
-                            vertexFocus = vertexNeighbor
+                            AL.focusVertex = vertexNeighbor
 
     def encodeGeometry(self):
         print("")
 
-    def quantification(self, listVertex, precision):
+    def quantification(self, precision):
         dc.getcontext().prec = precision
-        for i in range(len(listVertex)):
-            listVertex[i] = dc.Decimal(listVertex[i])
+        for vertex in self.vertices:
+            vertex.position = dc.Decimal(vertex.position)
 
     # r = v + u - w
     def prediction(self, vPosition, uPosition, wPosition):
