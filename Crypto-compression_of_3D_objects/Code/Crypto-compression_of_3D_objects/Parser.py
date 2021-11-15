@@ -11,7 +11,8 @@ def getNeighbors(vertex, faces):
     neighbors = set()
     for l in faces:
         if vertex in l:
-            neighbors = set.union(neighbors, set(v for v in l if v != vertex))
+            set.union(neighbors, set(v for v in l if v != vertex
+            print(neighbors)
     return neighbors
 
 
