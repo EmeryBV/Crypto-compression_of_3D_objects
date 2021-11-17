@@ -35,7 +35,7 @@ class Compression:
         # vertexFocus.setFocus(True)
 
         self.stack.append(AL)
-        while (self.stack):
+        while self.stack:
             AL = self.stack.pop()
             while (AL):
                 u = AL.nextFreeEdge()  # A MODIFIER
@@ -43,6 +43,7 @@ class Compression:
                 if u.isEncoded():
                     AL.add(u)
                     self.encode(filename, "add", str(u.valence))
+                    self.encodeGeometry(AL)
                     u.encode()
                 elif AL.contains(u):
                     self.stack.append(AL.split(u))
@@ -55,23 +56,26 @@ class Compression:
                             self.encode(filename, "merge", str(i), str(AL.getOffset(u)))
 
                 AL.removeFullVertices()
-                if  AL.focusVertex.isFull():
+                if AL.focusVertex.isFull():
                     for vertexNeighbor in range(len(AL.focusVertex.neighbors)):
                         if not vertexNeighbor.isFull():
                             AL.focusVertex = vertexNeighbor
 
-    def encodeGeometry(self):
-        print("")
+    def encodeGeometry(self, AL):
+
+     vertex = AL[len(AL)-1]
+     predictVertex = prediction(AL[0].position, AL[len(AL)-2].position, AL[len(AL)-3].position)
+     # print(vertex.position)
+     # print(predictVertex)
+     result = vertex.position - predictVertex
+     # print(result)
+     # print("\n")
+
 
     def quantification(self, precision):
-        dc.getcontext().prec = precision
         for vertex in self.vertices:
-            vertex.position = dc.Decimal(vertex.position)
-
-    # r = v + u - w
-    def prediction(self, vPosition, uPosition, wPosition):
-        rPosition = vPosition + uPosition - wPosition
-        return rPosition
+            for i in range(3):
+                vertex.position[i] = str(round(vertex.position[i], precision))
 
     def encode(self, filename, instruction, valence=None, offset=None, index=None):
         file = open(filename, "w")
@@ -84,3 +88,9 @@ class Compression:
             line = " ".join([instruction, str(index), str(offset)])
 
         file.write(line + "\n")
+
+
+# r = v + u - w
+def prediction(vPosition, uPosition, wPosition):
+    rPosition = vPosition + uPosition - wPosition
+    return rPosition

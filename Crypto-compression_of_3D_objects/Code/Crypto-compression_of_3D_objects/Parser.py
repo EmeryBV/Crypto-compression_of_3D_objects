@@ -12,7 +12,7 @@ def getNeighbors(vertex, faces):
     for l in faces:
         if vertex in l:
             neighbors = set.union(neighbors, set(v for v in l if v != vertex))
-    print(neighbors)
+    # print(neighbors)
     return neighbors
 
 
@@ -29,13 +29,13 @@ def sortNeighbors(vertex, vertices, neighbors):
         angles[n] = math.acos(np.dot(upVector, normalizedVec))
 
     sortedNeighbors = {k: v for k, v in sorted(angles.items(), key=lambda item: item[1], reverse=False)}
-    print( vertex, vertices[vertex], len(sortedNeighbors), sortedNeighbors )
+    # print( vertex, vertices[vertex], len(sortedNeighbors), sortedNeighbors )
     return sortedNeighbors.keys()
 
 
 def readMesh(file):
     trimesh.util.attach_to_log()
-    mesh = trimesh.load_mesh( file, "obj" )
+    mesh = trimesh.load_mesh(file, "obj", process = False, maintain_order = True)
 
     meshVertices = np.asarray(mesh.vertices)
     meshTriangles = np.asarray(mesh.faces)
