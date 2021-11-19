@@ -1,8 +1,8 @@
 import sys
 
-import Parser
 from Parser import readMesh
 from Compression import Compression
+from Decompression import Decompression
 
 
 def create_compress_file(filename):
