@@ -1,5 +1,6 @@
 import sys
 
+import Parser
 from Parser import readMesh
 from Compression import Compression
 
@@ -12,24 +13,19 @@ def create_compress_file(filename):
 if __name__ == '__main__':
     filename = "compressedMesh.obj"
     file = create_compress_file(filename)
-    file.write("test")
-    meshFile = "./Mesh/OBJ/cube.obj"
-    # meshFile = "./Mesh/OBJ/sphere.obj"
+    file.write("test.obj")
+    # meshFile = "./Mesh/OBJ/cube.obj"
+    meshFile = "./Mesh/OBJ/sphere.obj"
+    # meshFile = "./Mesh/OBJ/monkey.obj"
     vertices, faces = readMesh(meshFile)
     # decompression = Decompression()
 
     compression = Compression(vertices, faces)
     print(faces[0].vertices)
-    # compression.quantification(2)
-    minVertice, maxVertice = compression.getBoundingBox()
-    normalizePont = compression.remaping(minVertice, maxVertice)
-    compression.remapingInv(normalizePont, minVertice, maxVertice)
+    compression.quantification(1024)
+
+    # compression.remapingInv(normalizePont, minVertice, maxVertice)
     # AL = []
-    # AL.append(vertices[0])
-    # AL.append(vertices[3])
-    # AL.append(vertices[7])
-    # AL.append(vertices[4])
-    # compression.encodeGeometry(AL)
-    # compression.EncodeConnectivity(filename)
+    # Parser.writeMesh(compression.vertices, compression.triangles)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

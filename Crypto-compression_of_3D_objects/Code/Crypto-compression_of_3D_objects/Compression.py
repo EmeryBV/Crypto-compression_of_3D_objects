@@ -1,5 +1,6 @@
 import random
 
+import Parser
 from Edge import Edge
 from Vertex import Vertex
 from ActiveList import ActiveList
@@ -107,31 +108,63 @@ class Compression:
 
             # print("\n")
             l += 1
+        # print("\n")
         # print("aaa")
 
         return pointNormalize
 
     def remapingInv(self, pointNormalize, minVertice, maxVertice):
-        vertexquantize = []
+        vertexRemap = []
         l = 0
-
         for vertex in pointNormalize:
             vertexquantizePosition = []
             for i in range(3):
                 vertexquantizePosition.append(
                     vertex.position[i] * (abs(minVertice[i]) + abs(maxVertice[i])) - abs(minVertice[i]))
             # print(normalizeVertex)
-            vertexquantize.append(Vertex(vertex.index, vertexquantizePosition, vertex.neighbors))
+            vertexRemap.append(Vertex(vertex.index, vertexquantizePosition, vertex.neighbors))
 
             # print(vertexquantize[l].position)
             # print("\n")
             l += 1
+        return vertexRemap
+
+    def quantifieVertices(self, pointNormalize, coefficient):
+        verticeQuantifie = len(pointNormalize) * [None]
+        l = 0
+        for vertex in pointNormalize:
+            verticesQuantifiePosition = []
+            for i in range(3):
+                verticesQuantifiePosition.append(round(vertex.position[i] * coefficient))
+
+            # print(verticesQuantifiePosition)
+            vertexQuantifie = Vertex(vertex.index, verticesQuantifiePosition.copy(), vertex.neighbors)
+            verticeQuantifie[l] = vertexQuantifie
+            # print(verticeQuantifie[l].position)
+            l += 1
+        return verticeQuantifie
+
+    def dequantificationVertices(self, verticeQuantifie, coefficient):
+        verticeDequantifie = len(verticeQuantifie) * [None]
+        l = 0
+        for vertex in verticeQuantifie:
+            verticesDequantifiePosition = []
+            for i in range(3):
+                verticesDequantifiePosition.append(round(vertex.position[i] / coefficient))
+            # print(verticesQuantifiePosition)
+            vertexdeQuantifie = Vertex(vertex.index, verticesDequantifiePosition.copy(), vertex.neighbors)
+            verticeDequantifie[l] = vertexdeQuantifie
+            # print(verticeQuantifie[l].position)
+            l += 1
+        return verticeDequantifie
 
     def quantification(self, precision):
-        for vertex in self.vertices:
-
-            for i in range(3):
-                vertex.position[i] = str(round(vertex.position[i], precision))
+        minVertice, maxVertice = self.getBoundingBox()
+        normalizePoint = self.remaping(minVertice, maxVertice)
+        verticeQuantifie = self.quantifieVertices(normalizePoint, precision)
+        verticeDequantifie = self.quantifieVertices(verticeQuantifie, precision)
+        reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
+        Parser.writeMesh(reconstructVertices, self.triangles)
 
     def encode(self, filename, instruction, valence=None, offset=None, index=None):
         file = open(filename, "w")

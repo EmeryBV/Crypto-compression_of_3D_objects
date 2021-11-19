@@ -24,7 +24,7 @@ def sortNeighbors(vertex, vertices, neighbors):
 
     for n in neighbors:
         nPos = vertices[n]
-        vec = np.subtract(nPos,vertexPos)
+        vec = np.subtract(nPos, vertexPos)
         normalizedVec = vec / np.linalg.norm(vec)
         angles[n] = math.acos(np.dot(upVector, normalizedVec))
 
@@ -35,7 +35,7 @@ def sortNeighbors(vertex, vertices, neighbors):
 
 def readMesh(file):
     trimesh.util.attach_to_log()
-    mesh = trimesh.load_mesh(file, "obj", process = False, maintain_order = True)
+    mesh = trimesh.load_mesh(file, "obj", process=False, maintain_order=True)
 
     meshVertices = np.asarray(mesh.vertices)
     meshTriangles = np.asarray(mesh.faces)
@@ -46,7 +46,6 @@ def readMesh(file):
 
     vertices = []
     for i in range(0, len(meshVertices)):
-
         vertices.append(Vertex(i, meshVertices[i], neighbors[i]))
 
     faces = []
@@ -55,3 +54,25 @@ def readMesh(file):
         faces.append(Face([vertices[face[0]], vertices[face[1]], vertices[face[2]]]))
 
     return vertices, faces
+
+
+def writeMesh(listVertice, faces):
+    trimesh.util.attach_to_log()
+    listPosition = []
+    listIndex = []
+    listListIndex = []
+    for vertex in listVertice:
+        listPosition.append(vertex.position)
+    for triangle in faces:
+        listListIndex = []
+        for vertex in triangle.vertices:
+            listListIndex.append(vertex.index)
+        listIndex.append(listListIndex)
+
+    print(listIndex)
+    mesh = trimesh.Trimesh(listPosition, listIndex, process=False, maintain_order=True)
+
+    meshText = trimesh.exchange.obj.export_obj(mesh)
+    print(meshText)
+    file = open("test.obj", "w")
+    file.write(meshText)
