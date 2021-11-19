@@ -63,17 +63,51 @@ class Compression:
 
     def encodeGeometry(self, AL):
 
-     vertex = AL[len(AL)-1]
-     predictVertex = prediction(AL[0].position, AL[len(AL)-2].position, AL[len(AL)-3].position)
-     # print(vertex.position)
-     # print(predictVertex)
-     result = vertex.position - predictVertex
-     # print(result)
-     # print("\n")
+        vertex = AL[len(AL) - 1]
+        predictVertex = prediction(AL[0].position, AL[len(AL) - 2].position, AL[len(AL) - 3].position)
+        # print(vertex.position)
+        # print(predictVertex)
+        result = vertex.position - predictVertex
+        # print(result)
+        # print("\n")
 
+    def getBoundingBox(self):
+        minVertice = [10000, 10000, 10000]
+        maxVertice = [0, 0, 0]
+
+        for vertex in self.vertices:
+            for i in range(3):
+                if vertex.position[i] < minVertice[i]:
+                    minVertice[i] = vertex.position[i]
+                if vertex.position[i] > maxVertice[i]:
+                    maxVertice[i] = vertex.position[i]
+        # print(minVertice)
+        # print(maxVertice)
+        return minVertice, maxVertice
+
+    def remaping(self, minVertice, maxVertice):
+        pointNormalize = []
+        for i in range(3):
+            maxVertice[i] = abs(minVertice[i]) + abs(maxVertice[i])
+        l = 0
+        for vertex in self.vertices:
+            # print(vertex.position)
+            normalizeVertex = []
+
+            for i in range(3):
+                normalizeVertex.append((vertex.position[i] + abs(minVertice[i])) / maxVertice[i])
+            # print(normalizeVertex)
+            pointNormalize.append(Vertex(vertex.index, normalizeVertex, vertex.neighbors))
+
+            # print(normalizeVertex)
+            # print(pointNormalize[l].position)
+            # print(maxVertice[1])
+            print("\n")
+            l = +1
 
     def quantification(self, precision):
         for vertex in self.vertices:
+
             for i in range(3):
                 vertex.position[i] = str(round(vertex.position[i], precision))
 
