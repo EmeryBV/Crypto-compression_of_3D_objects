@@ -86,24 +86,46 @@ class Compression:
         return minVertice, maxVertice
 
     def remaping(self, minVertice, maxVertice):
-        pointNormalize = []
+        pointNormalize = (len(self.vertices)) * [None]
+        sumExtremum = []
         for i in range(3):
-            maxVertice[i] = abs(minVertice[i]) + abs(maxVertice[i])
+            sumExtremum.append(abs(minVertice[i]) + abs(maxVertice[i]))
         l = 0
         for vertex in self.vertices:
             # print(vertex.position)
             normalizeVertex = []
-
-            for i in range(3):
-                normalizeVertex.append((vertex.position[i] + abs(minVertice[i])) / maxVertice[i])
+            normalizeVertex.clear()
+            for i in range(0, 3):
+                normalizeVertex.append((vertex.position[i] + abs(minVertice[i])) / sumExtremum[i])
             # print(normalizeVertex)
-            pointNormalize.append(Vertex(vertex.index, normalizeVertex, vertex.neighbors))
+            newVertex = 0
+            newVertex = Vertex(vertex.index, normalizeVertex.copy(), vertex.neighbors)
+            pointNormalize[l] = newVertex
 
-            # print(normalizeVertex)
             # print(pointNormalize[l].position)
-            # print(maxVertice[1])
-            print("\n")
-            l = +1
+            # print(pointNormalize)
+
+            # print("\n")
+            l += 1
+        # print("aaa")
+
+        return pointNormalize
+
+    def remapingInv(self, pointNormalize, minVertice, maxVertice):
+        vertexquantize = []
+        l = 0
+
+        for vertex in pointNormalize:
+            vertexquantizePosition = []
+            for i in range(3):
+                vertexquantizePosition.append(
+                    vertex.position[i] * (abs(minVertice[i]) + abs(maxVertice[i])) - abs(minVertice[i]))
+            # print(normalizeVertex)
+            vertexquantize.append(Vertex(vertex.index, vertexquantizePosition, vertex.neighbors))
+
+            # print(vertexquantize[l].position)
+            # print("\n")
+            l += 1
 
     def quantification(self, precision):
         for vertex in self.vertices:

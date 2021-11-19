@@ -5,23 +5,25 @@ from Compression import Compression
 
 
 def create_compress_file(filename):
-    file = open(filename ,"w")
+    file = open(filename, "w")
     return file
+
 
 if __name__ == '__main__':
     filename = "compressedMesh.obj"
     file = create_compress_file(filename)
     file.write("test")
-    # meshFile = "./Mesh/OBJ/cube.obj"
-    meshFile = "./Mesh/OBJ/sphere.obj"
+    meshFile = "./Mesh/OBJ/cube.obj"
+    # meshFile = "./Mesh/OBJ/sphere.obj"
     vertices, faces = readMesh(meshFile)
     # decompression = Decompression()
 
-    compression = Compression( vertices, faces)
+    compression = Compression(vertices, faces)
     print(faces[0].vertices)
     # compression.quantification(2)
-    minVertice,maxVertice = compression.getBoundingBox()
-    compression.remaping(minVertice,maxVertice)
+    minVertice, maxVertice = compression.getBoundingBox()
+    normalizePont = compression.remaping(minVertice, maxVertice)
+    compression.remapingInv(normalizePont, minVertice, maxVertice)
     # AL = []
     # AL.append(vertices[0])
     # AL.append(vertices[3])
@@ -29,6 +31,5 @@ if __name__ == '__main__':
     # AL.append(vertices[4])
     # compression.encodeGeometry(AL)
     # compression.EncodeConnectivity(filename)
-
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
