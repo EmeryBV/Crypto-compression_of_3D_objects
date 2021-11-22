@@ -19,10 +19,9 @@ class Vertex:
 
     def isFull(self, verticesList):
         for n in self.neighbors:
-
             if not verticesList[n].isEncoded():
+                print("celui la est pas encodé", str(verticesList[n].index))
                 return False
         return True
-
 
     # def neighboringVertex(self,edge):

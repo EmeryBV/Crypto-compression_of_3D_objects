@@ -11,9 +11,10 @@ import decimal as dc
 
 class Compression:
 
-    def __init__(self, vertices, faces):
+    def __init__(self, vertices,edges, faces):
         self.stack = []
         self.vertices = vertices
+        self.edges = edges
         self.triangles = faces
 
     def getStartTriangle(self):
@@ -27,45 +28,50 @@ class Compression:
         AL = ActiveList(startVertices)
 
         # AL1 = ActiveList()
-        self.encode(filename, "add", startVertices[0].valence)
-        self.encode(filename, "add", startVertices[1].valence)
-        self.encode(filename, "add", startVertices[2].valence)
+        print(startVertices[0].index)
+        print(startVertices[1].index)
+        print(startVertices[2].index)
+        self.encode(filename, "add", startVertices[0], startVertices[0].valence)
+        self.encode(filename, "add", startVertices[1], startVertices[1].valence)
+        self.encode(filename, "add", startVertices[2], startVertices[2].valence)
 
         AL.focusVertex = startVertices[random.randint(0, 2)]
-
         # vertexFocus = startVertices[random.randint(0, 2)]
         # vertexFocus.setFocus(True)
 
         self.stack.append(AL)
         while self.stack:
             AL = self.stack.pop()
+            print("FOCUS VERTEX= ", AL.focusVertex.index)
             while AL:
-                u = AL.nextFreeEdge( self.vertices )
-                # u = Vertex(0, 0)  # A MODIFIER
+                e = AL.nextFreeEdge(self.edges)
+                u = AL.vertexAlongEdge(e)
                 if not AL.contains(u):
                     print(u.position)
                     AL.add(u)
-                    self.encode(filename, "add", str(u.valence))
-                    print("add" +str(u.valence))
+                    self.encode(filename, "add", str(u.valence), u)
+                    print("add" + str(u.index))
                     # encodedeGeometry(AL)
-                    u.encode()
-                else :
+                else:
                     if AL.contains(u):
                         self.stack.append(AL.split(u))
-                        self.encode(filename, "split", str(AL.getOffset(u)))
+                        self.encode(filename, "split", u, str(AL.getOffset(u)))
+                        print(u.index)
                         print("split" + str(AL.getOffset(u)))
                     else:
                         for i in range(len(self.stack)):
                             if self.stack[i].contains(u):
                                 AL.merge(self.stack[i], u)
                                 self.stack.remove(i)
-                                self.encode(filename, "merge", str(i), str(AL.getOffset(u)))
+                                self.encode(filename, "merge", u, str(i), str(AL.getOffset(u)))
+                                print("merge" + str(AL.getOffset(u)))
                 AL.removeFullVertices(self.vertices)
                 if AL.focusVertex.isFull(self.vertices):
-                    for vertexNeighbor in range(len(AL.focusVertex.neighbors)):
-
-                        if not vertexNeighbor.isFull(self.vertices):
-                            AL.focusVertex = vertexNeighbor
+                    for i in range(len(AL.focusVertex.neighbors)):
+                        # print("i=" + str(i))
+                        if not self.vertices[AL.focusVertex.neighbors[i]].isFull(self.vertices):
+                            AL.focusVertex = self.vertices[AL.focusVertex.neighbors[i]]
+                            break
 
     def encodeGeometry(self, AL):
 
@@ -171,9 +177,9 @@ class Compression:
         reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
         Parser.writeMesh(reconstructVertices, self.triangles)
 
-    def encode(self, filename, instruction, valence=None, offset=None, index=None):
+    def encode(self, filename, instruction, vertex, valence=None, offset=None, index=None):
         file = open(filename, "w")
-
+        vertex.encode()
         if instruction == "add":
             line = " ".join([instruction, str(valence)])
         elif instruction == "split":
@@ -183,13 +189,15 @@ class Compression:
 
         file.write(line + "\n")
 
+
 def isFull(self):
     for n in self.neighbors:
         if not n.isEncoded():
             return False
     return True
+
+
 # r = v + u - w
 def prediction(vPosition, uPosition, wPosition):
     rPosition = vPosition + uPosition - wPosition
     return rPosition
-

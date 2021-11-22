@@ -5,7 +5,7 @@ class ActiveList:
         self.focusVertex = None
 
     def add(self, vertex):
-        self.vertexList.append( vertex)
+        self.vertexList.append(vertex)
 
     def contains(self, vertex):
         return vertex in self.vertexList
@@ -24,7 +24,7 @@ class ActiveList:
 
     def getOffset(self, vertex):
         result = 0
-        vertexOffset = self.vertexList[len(self.vertexList )-1]
+        vertexOffset = self.vertexList[len(self.vertexList) - 1]
         i = 1
         while vertex.index != vertexOffset.index:
             i += 1
@@ -41,7 +41,21 @@ class ActiveList:
                 self.vertexList.remove(vertex)
         self.focusVertex = self.vertexList[0]
 
-    def nextFreeEdge(self, verticesList):
+    def nextFreeEdge(self, edgeList):
+        for edgeID in self.focusVertex.edges:
+            if not edgeList[edgeID].isEncoded():
+                return edgeList[edgeID]
+        else:
+            print("Auncun edge")
+
+    def vertexAlongEdge(self, Edge):
+        for vertex in Edge:
+            if vertex.index != self.focusVertex.id:
+                return vertex
+
+    def nextFreeVertex(self, verticesList):
         for n in self.focusVertex.neighbors:
             if not verticesList[n].isEncoded():
                 return verticesList[n]
+            else:
+                print("Auncun vertex")

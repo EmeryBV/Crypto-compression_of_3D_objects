@@ -13,8 +13,8 @@ if __name__ == '__main__':
     filename = "compressedMesh.txt"
     file = create_compress_file(filename)
     # file.write("test.obj")
-    # meshFile = "./Mesh/OBJ/cube.obj"
-    meshFile = "./Mesh/OBJ/simpleShape.obj"
+    meshFile = "./Mesh/OBJ/cube.obj"
+    # meshFile = "./Mesh/OBJ/simpleShape.obj"
     # meshFile = "./Mesh/OBJ/cube.obj"
     # meshFile = "./Mesh/OBJ/monkey.obj"
     vertices, faces = readMesh(meshFile)
