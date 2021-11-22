@@ -20,6 +20,8 @@ if __name__ == '__main__':
     vertices, faces = readMesh(meshFile)
     # decompression = Decompression()
     compression = Compression(vertices, faces)
+    # print(faces[0].vertices)
+    # compression.quantification(1024)
     compression.encodeConnectivity(filename)
 
     # compression.quantification(1024)

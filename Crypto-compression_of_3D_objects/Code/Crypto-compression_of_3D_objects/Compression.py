@@ -46,16 +46,15 @@ class Compression:
                     print(u.position)
                     AL.add(u)
                     self.encode(filename, "add", str(u.valence))
-
-                print("add" +tr(u.valence)
-                deGeometry(AL)
-                    u.encode()
+                    print("add" +str(u.valence))
+                    # deGeometry(AL)
+                    # u.encode()
                 else :
                     if AL.contains(u):
                         self.stack.append(AL.split(u))
                         self.encode(filename, "split", str(AL.getOffset(u)))
-                print("add" + tr(u.str(AL.getOffset(u))
-split                 else:
+                        print("split" + str(AL.getOffset(u)))
+                    else:
                         for i in range(len(self.stack)):
                             if self.stack[i].contains(u):
                                 AL.merge(self.stack[i], u)
