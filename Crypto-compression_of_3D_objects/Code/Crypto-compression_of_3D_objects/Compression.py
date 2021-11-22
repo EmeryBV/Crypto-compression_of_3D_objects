@@ -47,8 +47,8 @@ class Compression:
                     AL.add(u)
                     self.encode(filename, "add", str(u.valence))
                     print("add" +str(u.valence))
-                    # deGeometry(AL)
-                    # u.encode()
+                    # encodedeGeometry(AL)
+                    u.encode()
                 else :
                     if AL.contains(u):
                         self.stack.append(AL.split(u))
