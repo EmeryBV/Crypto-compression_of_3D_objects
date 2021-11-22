@@ -17,9 +17,10 @@ class Vertex:
     def isEncoded(self):
         return self.encoded
 
-    def isFull(self):
+    def isFull(self, verticesList):
         for n in self.neighbors:
-            if not n.isEncoded():
+
+            if not verticesList[n].isEncoded():
                 return False
         return True
 

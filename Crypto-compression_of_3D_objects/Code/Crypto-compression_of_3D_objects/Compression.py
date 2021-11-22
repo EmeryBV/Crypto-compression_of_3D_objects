@@ -19,12 +19,13 @@ class Compression:
     def getStartTriangle(self):
         return self.triangles[random.randint(0, len(self.triangles) - 1)]
 
-    def EncodeConnectivity(self, filename):
+    def encodeConnectivity(self, filename):
         file = open(filename, "w")
         start = self.getStartTriangle()
         startVertices = start.vertices
 
-        AL = ActiveList(start)
+        AL = ActiveList(startVertices)
+
         # AL1 = ActiveList()
         self.encode(filename, "add", startVertices[0].valence)
         self.encode(filename, "add", startVertices[1].valence)
@@ -38,28 +39,31 @@ class Compression:
         self.stack.append(AL)
         while self.stack:
             AL = self.stack.pop()
-            while (AL):
-                u = AL.nextFreeEdge()  # A MODIFIER
+            while AL:
+                u = AL.nextFreeEdge( self.vertices )
                 # u = Vertex(0, 0)  # A MODIFIER
-                if u.isEncoded():
+                if not AL.contains(u):
+                    print(u.position)
                     AL.add(u)
                     self.encode(filename, "add", str(u.valence))
-                    self.encodeGeometry(AL)
+                    # self.encodeGeometry(AL)
                     u.encode()
-                elif AL.contains(u):
-                    self.stack.append(AL.split(u))
-                    self.encode(filename, "split", str(AL.getOffset(u)))
-                else:
-                    for i in range(len(self.stack)):
-                        if self.stack[i].contains(u):
-                            AL.merge(self.stack[i], u)
-                            self.stack.remove(i)
-                            self.encode(filename, "merge", str(i), str(AL.getOffset(u)))
-
-                AL.removeFullVertices()
-                if AL.focusVertex.isFull():
+                else :
+                    if AL.contains(u):
+                        self.stack.append(AL.split(u))
+                        self.encode(filename, "split", str(AL.getOffset(u)))
+                        print("la")
+                    else:
+                        for i in range(len(self.stack)):
+                            if self.stack[i].contains(u):
+                                AL.merge(self.stack[i], u)
+                                self.stack.remove(i)
+                                self.encode(filename, "merge", str(i), str(AL.getOffset(u)))
+                AL.removeFullVertices(self.vertices)
+                if AL.focusVertex.isFull(self.vertices):
                     for vertexNeighbor in range(len(AL.focusVertex.neighbors)):
-                        if not vertexNeighbor.isFull():
+
+                        if not vertexNeighbor.isFull(self.vertices):
                             AL.focusVertex = vertexNeighbor
 
     def encodeGeometry(self, AL):
@@ -178,8 +182,13 @@ class Compression:
 
         file.write(line + "\n")
 
-
+def isFull(self):
+    for n in self.neighbors:
+        if not n.isEncoded():
+            return False
+    return True
 # r = v + u - w
 def prediction(vPosition, uPosition, wPosition):
     rPosition = vPosition + uPosition - wPosition
     return rPosition
+

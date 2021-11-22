@@ -4,12 +4,8 @@ class ActiveList:
         self.vertexList = vertexList
         self.focusVertex = None
 
-    def __init__(self):
-        self.vertexList = []
-        self.focusVertex = None
-
     def add(self, vertex):
-        self.vertexList.append(self, vertex)
+        self.vertexList.append( vertex)
 
     def contains(self, vertex):
         return vertex in self.vertexList
@@ -28,7 +24,7 @@ class ActiveList:
 
     def getOffset(self, vertex):
         result = 0
-        vertexOffset = self.vertexList[len(self.vertexList - 1)]
+        vertexOffset = self.vertexList[len(self.vertexList )-1]
         i = 1
         while vertex.index != vertexOffset.index:
             i += 1
@@ -39,15 +35,13 @@ class ActiveList:
     def merge(self, AL1, vertex):
         self.vertexList += AL1
 
-    def removeFullVertices(self):
+    def removeFullVertices(self, verticesList):
         for vertex in self.vertexList:
-            if vertex.isFull():
+            if vertex.isFull(verticesList):
                 self.vertexList.remove(vertex)
-
         self.focusVertex = self.vertexList[0]
 
-    def nextFreeEdge(self):
+    def nextFreeEdge(self, verticesList):
         for n in self.focusVertex.neighbors:
-            # print("here" + str(n))
-            if not n.isEncoded():
-                return n
+            if not verticesList[n].isEncoded():
+                return verticesList[n]
