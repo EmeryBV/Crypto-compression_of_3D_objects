@@ -24,12 +24,14 @@ class ActiveList:
 
     def getOffset(self, vertex):
         result = 0
-        vertexOffset = self.vertexList[len(self.vertexList) - 1]
-        i = 1
-        while vertex.index != vertexOffset.index:
-            i += 1
-            result += 1
-            vertexOffset = self.vertexList[len(self.vertexList - i)]
+        copy = self.vertexList.copy()
+        copy.reverse()
+        for v in copy:
+            if self.focusVertex.index != v.index:
+                result += 1
+            else:
+                break
+
         return result
 
     def merge(self, AL1, vertex):
@@ -47,6 +49,7 @@ class ActiveList:
                 edge.encode()
                 return edge
 
+        print("nextFreeEdge return None")
         return None
 
     def vertexAlongEdge(self, edge):
