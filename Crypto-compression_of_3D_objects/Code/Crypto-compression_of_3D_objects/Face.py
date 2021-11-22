@@ -1,13 +1,8 @@
 class Face:
 
-    def __init__(self, vertices):
+    def __init__(self, vertices, edges):
         self.vertices = vertices
+        self.edges = edges
         pass
-
-    # def __init__(self, v0, v1, v2):
-    #     self.vertices.append(v0)
-    #     self.vertices.append(v1)
-    #     self.vertices.append(v2)
-    #     pass
 
 

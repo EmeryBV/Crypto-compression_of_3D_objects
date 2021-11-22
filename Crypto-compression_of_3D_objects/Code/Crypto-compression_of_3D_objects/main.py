@@ -14,14 +14,11 @@ if __name__ == '__main__':
     file = create_compress_file(filename)
     # file.write("test.obj")
     meshFile = "./Mesh/OBJ/cube.obj"
-    # meshFile = "./Mesh/OBJ/simpleShape.obj"
-    # meshFile = "./Mesh/OBJ/cube.obj"
-    # meshFile = "./Mesh/OBJ/monkey.obj"
     vertices, faces = readMesh(meshFile)
     # decompression = Decompression()
     compression = Compression(vertices, faces)
     # print(faces[0].vertices)
-    # compression.quantification(1024)
+    # compression.quantification(20)
     compression.encodeConnectivity(filename)
 
     # compression.quantification(1024)

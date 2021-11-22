@@ -3,6 +3,7 @@ import trimesh
 import numpy as np
 import networkx as nx
 
+from Edge import Edge
 from Face import Face
 from Vertex import Vertex
 
@@ -57,10 +58,11 @@ def readMesh(file):
                 edges.append( allEdges[(i, n)] )
 
         vertices.append(Vertex(i, meshVertices[i], neighbors[i], edges))
-        print( i, len(neighbors[i]), edges )
+        # print( i, len(neighbors[i]), [edge.vertices for edge in edges] )
 
     faces = []
     for i in range(0, len(meshTriangles)):
+        edges = []
         face = meshTriangles[i]
 
         if (face[0], face[1]) in allEdges.keys():

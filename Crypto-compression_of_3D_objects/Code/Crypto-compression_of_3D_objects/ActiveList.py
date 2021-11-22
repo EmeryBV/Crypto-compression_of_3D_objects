@@ -37,20 +37,21 @@ class ActiveList:
 
     def removeFullVertices(self, verticesList):
         for vertex in self.vertexList:
-            if vertex.isFull(verticesList):
+            if vertex.isFull():
                 self.vertexList.remove(vertex)
         self.focusVertex = self.vertexList[0]
 
-    def nextFreeEdge(self, edgeList):
-        for edgeID in self.focusVertex.edges:
-            if not edgeList[edgeID].isEncoded():
-                return edgeList[edgeID]
-        else:
-            print("Auncun edge")
+    def nextFreeEdge(self):
+        for edge in self.focusVertex.edges:
+            if not edge.isEncoded():
+                edge.encode()
+                return edge
 
-    def vertexAlongEdge(self, Edge):
-        for vertex in Edge:
-            if vertex.index != self.focusVertex.id:
+        return None
+
+    def vertexAlongEdge(self, edge):
+        for vertex in edge.vertices:
+            if vertex != self.focusVertex.index:
                 return vertex
 
     def nextFreeVertex(self, verticesList):
@@ -59,3 +60,4 @@ class ActiveList:
                 return verticesList[n]
             else:
                 print("Auncun vertex")
+                return None

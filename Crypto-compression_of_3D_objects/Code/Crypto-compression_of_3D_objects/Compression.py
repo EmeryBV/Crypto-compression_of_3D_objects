@@ -11,10 +11,9 @@ import decimal as dc
 
 class Compression:
 
-    def __init__(self, vertices,edges, faces):
+    def __init__(self, vertices,faces):
         self.stack = []
         self.vertices = vertices
-        self.edges = edges
         self.triangles = faces
 
     def getStartTriangle(self):
@@ -22,18 +21,20 @@ class Compression:
 
     def encodeConnectivity(self, filename):
         file = open(filename, "w")
-        start = self.getStartTriangle()
-        startVertices = start.vertices
+        startFace = self.getStartTriangle()
+        startVertices = startFace.vertices
 
-        AL = ActiveList(startVertices)
-
-        # AL1 = ActiveList()
         print(startVertices[0].index)
         print(startVertices[1].index)
         print(startVertices[2].index)
         self.encode(filename, "add", startVertices[0], startVertices[0].valence)
         self.encode(filename, "add", startVertices[1], startVertices[1].valence)
         self.encode(filename, "add", startVertices[2], startVertices[2].valence)
+
+        for edge in startFace.edges:
+            edge.encode()
+
+        AL = ActiveList(startVertices)
 
         AL.focusVertex = startVertices[random.randint(0, 2)]
         # vertexFocus = startVertices[random.randint(0, 2)]
@@ -44,32 +45,33 @@ class Compression:
             AL = self.stack.pop()
             print("FOCUS VERTEX= ", AL.focusVertex.index)
             while AL:
-                e = AL.nextFreeEdge(self.edges)
-                u = AL.vertexAlongEdge(e)
+                e = AL.nextFreeEdge()
+                u = self.vertices[ AL.vertexAlongEdge(e) ]
+                print("Vertex u=" ,u.index)
                 if not AL.contains(u):
                     print(u.position)
                     AL.add(u)
-                    self.encode(filename, "add", str(u.valence), u)
-                    print("add" + str(u.index))
+                    self.encode(filename, "add", str(u.valence))
+
                     # encodedeGeometry(AL)
                 else:
                     if AL.contains(u):
                         self.stack.append(AL.split(u))
                         self.encode(filename, "split", u, str(AL.getOffset(u)))
-                        print(u.index)
-                        print("split" + str(AL.getOffset(u)))
+
                     else:
                         for i in range(len(self.stack)):
                             if self.stack[i].contains(u):
                                 AL.merge(self.stack[i], u)
                                 self.stack.remove(i)
                                 self.encode(filename, "merge", u, str(i), str(AL.getOffset(u)))
-                                print("merge" + str(AL.getOffset(u)))
+
                 AL.removeFullVertices(self.vertices)
-                if AL.focusVertex.isFull(self.vertices):
+
+                if AL.focusVertex.isFull():
                     for i in range(len(AL.focusVertex.neighbors)):
                         # print("i=" + str(i))
-                        if not self.vertices[AL.focusVertex.neighbors[i]].isFull(self.vertices):
+                        if not self.vertices[AL.focusVertex.neighbors[i]].isFull():
                             AL.focusVertex = self.vertices[AL.focusVertex.neighbors[i]]
                             break
 
@@ -111,7 +113,7 @@ class Compression:
                 normalizeVertex.append((vertex.position[i] + abs(minVertice[i])) / sumExtremum[i])
             # print(normalizeVertex)
             newVertex = 0
-            newVertex = Vertex(vertex.index, normalizeVertex.copy(), vertex.neighbors)
+            newVertex = Vertex(vertex.index, normalizeVertex.copy(), vertex.neighbors, [])
             pointNormalize[l] = newVertex
 
             # print(pointNormalize[l].position)
@@ -140,8 +142,8 @@ class Compression:
             l += 1
         return vertexRemap
 
-    def quantifieVertices(self, pointNormalize, coefficient):
-        verticeQuantifie = len(pointNormalize) * [None]
+    def quantifyVertices(self, pointNormalize, coefficient):
+        quantifiedVertices = len(pointNormalize) * [None]
         l = 0
         for vertex in pointNormalize:
             verticesQuantifiePosition = []
@@ -150,30 +152,30 @@ class Compression:
 
             # print(verticesQuantifiePosition)
             vertexQuantifie = Vertex(vertex.index, verticesQuantifiePosition.copy(), vertex.neighbors)
-            verticeQuantifie[l] = vertexQuantifie
-            # print(verticeQuantifie[l].position)
+            quantifiedVertices[l] = vertexQuantifie
+            # print(quantifiedVertices[l].position)
             l += 1
-        return verticeQuantifie
+        return quantifiedVertices
 
-    def dequantificationVertices(self, verticeQuantifie, coefficient):
-        verticeDequantifie = len(verticeQuantifie) * [None]
+    def dequantificationVertices(self, quantifiedVertices, coefficient):
+        verticeDequantifie = len(quantifiedVertices) * [None]
         l = 0
-        for vertex in verticeQuantifie:
+        for vertex in quantifiedVertices:
             verticesDequantifiePosition = []
             for i in range(3):
                 verticesDequantifiePosition.append(round(vertex.position[i] / coefficient))
             # print(verticesQuantifiePosition)
             vertexdeQuantifie = Vertex(vertex.index, verticesDequantifiePosition.copy(), vertex.neighbors)
             verticeDequantifie[l] = vertexdeQuantifie
-            # print(verticeQuantifie[l].position)
+            # print(quantifiedVertices[l].position)
             l += 1
         return verticeDequantifie
 
     def quantification(self, precision):
         minVertice, maxVertice = self.getBoundingBox()
         normalizePoint = self.remaping(minVertice, maxVertice)
-        verticeQuantifie = self.quantifieVertices(normalizePoint, precision)
-        verticeDequantifie = self.quantifieVertices(verticeQuantifie, precision)
+        quantifiedVertices = self.quantifyVertices(normalizePoint, precision)
+        verticeDequantifie = self.quantifyVertices(quantifiedVertices, precision)
         reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
         Parser.writeMesh(reconstructVertices, self.triangles)
 
@@ -187,6 +189,7 @@ class Compression:
         else:
             line = " ".join([instruction, str(index), str(offset)])
 
+        print( line )
         file.write(line + "\n")
 
 

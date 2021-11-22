@@ -1,9 +1,10 @@
 class Vertex:
 
-    def __init__(self, index, position, neighbors):
+    def __init__(self, index, position, neighbors ,edges = None):
         self.index = index
         self.position = position
         self.neighbors = neighbors
+        self.edges  = edges
         self.valence = len(self.neighbors)
         self.focusVertex = False
         self.encoded = False
@@ -17,10 +18,9 @@ class Vertex:
     def isEncoded(self):
         return self.encoded
 
-    def isFull(self, verticesList):
-        for n in self.neighbors:
-            if not verticesList[n].isEncoded():
-                print("celui la est pas encodé", str(verticesList[n].index))
+    def isFull(self):
+        for edge in self.edges:
+            if not edge.isEncoded():
                 return False
         return True
 
