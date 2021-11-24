@@ -14,13 +14,20 @@ class ActiveList:
         return len(self.vertexList) == 0
 
     def split(self, vertex):
+        ALBis = []
         for i in range(0, len(self.vertexList)):
+            # print(self.vertexList[i].index)
             if vertex == self.vertexList[i]:
                 ALBis = ActiveList(self.vertexList[i:])
                 self.vertexList = self.vertexList[0:i + 1]
                 break
+        ALBis.focusVertex = ALBis.vertexList[0]
+        AL = self
+        if len(ALBis.vertexList) >= len(self.vertexList):
+            AL = ALBis
+            ALBis = self
 
-        return ALBis
+        return AL, ALBis
 
     def getOffset(self, vertex):
         result = 0
@@ -35,13 +42,23 @@ class ActiveList:
         return result
 
     def merge(self, AL1, vertex):
-        self.vertexList += AL1
+        for i in range(len(AL1.vertexList)):
+            if AL1.vertexList[i] == vertex:
+                for y in range(0, len(self.vertexList)):
+                    AL1.vertexList.insert(i + y + 1, self.vertexList[
+                        y])  # On ne veut pas copier 2 fois vertex dans la nouvelle liste
+                break
+        print("Vertex in AL Merge =", [n.index for n in AL1.vertexList])
 
-    def removeFullVertices(self, verticesList):
+    def removeFullVertices(self):
+        deleteVertices = []
         for vertex in self.vertexList:
             if vertex.isFull():
                 self.vertexList.remove(vertex)
-        self.focusVertex = self.vertexList[0]
+                print("Suppresion de:", vertex.index)
+                deleteVertices.append(vertex)
+        return deleteVertices
+        # self.focusVertex = self.vertexList[0]
 
     def nextFreeEdge(self):
         for edge in self.focusVertex.edges:

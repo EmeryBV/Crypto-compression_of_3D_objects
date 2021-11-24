@@ -85,7 +85,7 @@ def readMesh(file):
     return vertices, faces
 
 
-def writeMesh(listVertice, faces):
+def writeMesh(listVertice, faces, filename):
     trimesh.util.attach_to_log()
     listPosition = []
     listIndex = []
@@ -101,6 +101,6 @@ def writeMesh(listVertice, faces):
 
     mesh = trimesh.Trimesh(listPosition, listIndex, process=False, maintain_order=True)
 
-    meshText = trimesh.exchange.obj.export_obj(mesh)
-    file = open("test.obj", "w")
+    meshText = trimesh.exchange.obj.export_obj(mesh,digits=0)
+    file = open(filename, "w")
     file.write(meshText)

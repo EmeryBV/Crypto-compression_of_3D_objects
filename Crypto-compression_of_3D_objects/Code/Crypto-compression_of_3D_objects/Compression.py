@@ -4,7 +4,8 @@ import Parser
 from Edge import Edge
 from Vertex import Vertex
 from ActiveList import ActiveList
-
+import binary_operation
+import huffman
 import numpy as np
 import decimal as dc
 
@@ -36,41 +37,46 @@ class Compression:
 
         AL = ActiveList(startVertices)
 
-        AL.focusVertex = startVertices[2]
+        AL.focusVertex = startVertices[0]
         # vertexFocus = startVertices[random.randint(0, 2)]
         # vertexFocus.setFocus(True)
 
         self.stack.append(AL)
-        while self.stack:
+        while len(self.stack) != 0:
             AL = self.stack.pop()
-            while AL:
+            while len(AL.vertexList) != 0:
                 print("FOCUS VERTEX= ", AL.focusVertex.index)
+
+                print("Vertex in AL =", [n.index for n in AL.vertexList])
                 print("NEIGH= ", [n for n in AL.focusVertex.neighbors])
 
                 e = AL.nextFreeEdge()
                 u = self.vertices[AL.vertexAlongEdge(e)]
                 print("Vertex u=", u.index)
-                print("Valence u=", u.valence)
+                # print("Valence u=", u.valence)
                 # for AlList in stack:
                 if not u.isEncoded():
                     print(u.position)
                     AL.add(u)
-                    self.encode(filename, "add", vertex = u, valence = str(u.valence))
-
+                    self.encode(filename, "add", vertex=u, valence=str(u.valence))
                     # encodedeGeometry(AL)
                 else:
                     if AL.contains(u):
-                        self.stack.append(AL.split(u))
-                        self.encode(filename, "split", vertex = u, offset =str(AL.getOffset(u)))
-
+                        AL, ALBis = AL.split(u)
+                        self.stack.append(ALBis)  #  a modifer
+                        self.encode(filename, "split", vertex=u, offset=str(AL.getOffset(u)))
+                        # print("Vertex in ALBIS =", [n.index for n in ALBis.vertexList])
                     else:
                         for i in range(len(self.stack)):
                             if self.stack[i].contains(u):
+                                print("Vertex where u is find: ", [n.index for n in self.stack[i].vertexList])
                                 AL.merge(self.stack[i], u)
-                                self.stack.remove(i)
-                                self.encode(filename, "merge", vertex = u, index = str(i), offset = str(AL.getOffset(u)))
+                                self.encode(filename, "merge", vertex=u, index=str(i), offset=str(AL.getOffset(u)))
+                                AL = self.stack[i]
+                                self.stack.remove(self.stack[i])
+                                break
 
-                    AL.removeFullVertices(self.vertices)
+                AL.removeFullVertices()
 
                 if AL.focusVertex.isFull():
                     for i in range(len(AL.focusVertex.neighbors)):
@@ -88,6 +94,19 @@ class Compression:
         result = vertex.position - predictVertex
         # print(result)
         # print("\n")
+
+    def encode(self, filename, instruction, vertex, valence=None, offset=None, index=None):
+        file = open(filename, "a")
+        vertex.encode()
+        if instruction == "add":
+            line = " ".join([str(vertex.index), instruction, str(valence)])
+        elif instruction == "split":
+            line = " ".join([str(vertex.index), instruction, str(offset)])
+        else:
+            line = " ".join([str(vertex.index), instruction, str(index), str(offset)])
+
+        print(line)
+        file.write(line + "\n")
 
     def getBoundingBox(self):
         minVertice = [10000, 10000, 10000]
@@ -154,10 +173,9 @@ class Compression:
             for i in range(3):
                 verticesQuantifiePosition.append(round(vertex.position[i] * coefficient))
 
-            # print(verticesQuantifiePosition)
             vertexQuantifie = Vertex(vertex.index, verticesQuantifiePosition.copy(), vertex.neighbors)
+
             quantifiedVertices[l] = vertexQuantifie
-            # print(quantifiedVertices[l].position)
             l += 1
         return quantifiedVertices
 
@@ -175,33 +193,30 @@ class Compression:
             l += 1
         return verticeDequantifie
 
-    def quantification(self, precision):
+    def quantification(self, precision, filenameMeshQuantify, filenameCompressHuffman):
         minVertice, maxVertice = self.getBoundingBox()
         normalizePoint = self.remaping(minVertice, maxVertice)
         quantifiedVertices = self.quantifyVertices(normalizePoint, precision)
-        verticeDequantifie = self.quantifyVertices(quantifiedVertices, precision)
+        verticeDequantifie = self.dequantificationVertices(quantifiedVertices, precision)
         reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
-        Parser.writeMesh(reconstructVertices, self.triangles)
-
-    def encode(self, filename, instruction, vertex, valence=None, offset=None, index=None):
-        file = open(filename, "a")
-        vertex.encode()
-        if instruction == "add":
-            line = " ".join([str(vertex.index), instruction, str(valence)])
-        elif instruction == "split":
-            line = " ".join([instruction, str(offset)])
-        else:
-            line = " ".join([instruction, str(index), str(offset)])
-
-        print(line)
-        file.write(line + "\n")
+        Parser.writeMesh(quantifiedVertices, self.triangles, filenameMeshQuantify)
+        compressWithHuffman(filenameMeshQuantify, filenameCompressHuffman)
 
 
-def isFull(self):
-    for n in self.neighbors:
-        if not n.isEncoded():
-            return False
-    return True
+def compressWithHuffman(filenameMeshQuantify, filenameCompressHuffman):
+    fileQuantifie = open(filenameMeshQuantify, 'r')
+    text = fileQuantifie.read()
+    textCompresser, dico = huffman.compresser(text)
+    print("Avant : {} bits / Après : {} bits".format(len(text) * 8, len(textCompresser)))
+    fileCompress = open(filenameCompressHuffman, "w")
+    fileCompress.write(textCompresser)
+    fileCompress.close()
+    fileUncompress = open(filenameCompressHuffman, "r")
+
+
+def uncompressWithHuffman(filenameCompressHuffman):
+    fileUncompress = open(filenameCompressHuffman, "r")
+    filenameUncompressHuffman = fileUncompress.read()
 
 
 # r = v + u - w
