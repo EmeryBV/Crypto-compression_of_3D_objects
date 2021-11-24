@@ -4,8 +4,9 @@ class ActiveList:
         self.vertexList = vertexList
         self.focusVertex = None
 
-    def add(self, vertex):
+    def addVertex(self, vertex):
         self.vertexList.append(vertex)
+
 
     def contains(self, vertex):
         return vertex in self.vertexList
@@ -59,7 +60,7 @@ class ActiveList:
     def nextFreeEdge(self):
         for edge in self.focusVertex.edges:
             if not edge.isEncoded():
-                edge.encodeVertexInFile()
+                edge.encode()
                 return edge
 
         print("nextFreeEdge return None")
@@ -77,3 +78,8 @@ class ActiveList:
             else:
                 print("Auncun vertex")
                 return None
+
+    def getPreviousNeighbour(self, vertex):
+        for i in range(len(self.focusVertex.neighbors)):
+            if self.focusVertex.neighbors[i] == vertex.index:
+                return self.focusVertex.neighbors[i-1]

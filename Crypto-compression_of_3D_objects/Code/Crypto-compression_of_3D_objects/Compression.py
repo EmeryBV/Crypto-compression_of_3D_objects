@@ -4,7 +4,7 @@ import Parser
 from Edge import Edge
 from Vertex import Vertex
 from ActiveList import ActiveList
-
+import huffman
 import binary_operation
 import numpy as np
 import decimal as dc
@@ -22,15 +22,16 @@ class Compression:
         return self.triangles[0]
 
     def encodeConnectivity(self):
+
         startFace = self.getStartTriangle()
         startVertices = startFace.vertices
 
-        self.encodeVertexInFile(self.filename, "add", vertex = startVertices[0], valence = startVertices[0].valence)
-        self.encodeVertexInFile(self.filename, "add", vertex = startVertices[1], valence = startVertices[1].valence)
-        self.encodeVertexInFile(self.filename, "add", vertex = startVertices[2], valence = startVertices[2].valence)
+        self.encodeVertexInFile( "add", vertex=startVertices[0], valence=startVertices[0].valence)
+        self.encodeVertexInFile( "add", vertex=startVertices[1], valence=startVertices[1].valence)
+        self.encodeVertexInFile( "add", vertex=startVertices[2], valence=startVertices[2].valence)
 
         for edge in startFace.edges:
-            edge.encodeVertexInFile()
+            edge.encode()
 
         AL = ActiveList(startVertices)
 
@@ -39,8 +40,9 @@ class Compression:
         # vertexFocus.setFocus(True)
 
         self.stack.append(AL)
+
         while len(self.stack) != 0:
-            AL = self.stack.pop( len(self.stack) - 1 )
+            AL = self.stack.pop(len(self.stack) - 1)
 
             while AL.vertexList:
 
@@ -55,23 +57,24 @@ class Compression:
                 # print("Valence u=", u.valence)
                 # for AlList in stack:
                 if not u.isEncoded():
-                    AL.add(u)
-                    self.encodeFace( AL.focusVertex, u )
-                    self.encodeVertexInFile(self.filename, "add", vertex = u, valence=str(u.valence))
 
+                    self.encodeFace(u, AL.focusVertex, self.vertices[AL.getPreviousNeighbour(u)])
+                    self.encodeVertexInFile( "add", vertex=u, valence=str(u.valence))
+                    AL.addVertex(u)
                     # encodedeGeometry(AL)
                 elif AL.contains(u):
                     ALBis = AL.split(u)
-                    print ("Split occuring on ", u.index)
-                    print( "AL : ", [k.index for k in AL.vertexList], "ALBis : ", [k.index for k in ALBis.vertexList] )
+                    print("Split occuring on ", u.index)
+                    print("AL : ", [k.index for k in AL.vertexList], "ALBis : ", [k.index for k in ALBis.vertexList])
                     self.stack.append(ALBis)
-                    self.encodeVertexInFile(self.filename, "split", vertex = u, offset=str(AL.getOffset(u)))
+                    self.encodeVertexInFile( "split", vertex=u, offset=str(AL.getOffset(u)))
                     # print("Vertex in ALBIS =", [n.index for n in ALBis.vertexList])
                 else:
                     for AList in self.stack:
                         if AList.contains(u):
                             print("Vertex where u is found ", [n.index for n in AList.vertexList])
-                            self.encodeVertexInFile(self.filename, "merge", vertex=u, index=u.index, offset=str(AL.getOffset(u)))
+                            self.encodeVertexInFile( "merge", vertex=u, index=u.index,
+                                                    offset=str(AL.getOffset(u)))
                             # AL.merge(AList, u)
 
                             # AL = AList
@@ -93,16 +96,22 @@ class Compression:
         # print(result)
         # print("\n")
 
-    def encodeFace(self, v1, v2, v3 ):
-        face = self.getFaces( v1, v2, v3 )
+    def encodeFace(self, v1, v2, v3):
+        face = self.getFaces(v1, v2, v3)
+        print("ahaha")
+        print(v1.index)
+        print(v2.index)
+        print(v3.index)
         for edge in face.edges:
+            print(edge.vertices)
             if not edge.isEncoded():
+                print("here")
                 edge.encode()
 
-    def encodeVertexInFile(self, instruction, vertex, valence=None, offset=None, index=None):
+    def encodeVertexInFile(self, instruction, vertex , valence=None, offset=None, index=None):
         file = open(self.filename, "a")
         if instruction == "add":
-            vertex.encodeVertexInFile()
+            vertex.encode()
             line = " ".join([str(vertex.index), instruction, str(valence)])
         elif instruction == "split":
             line = " ".join([str(vertex.index), instruction, str(offset)])
@@ -129,7 +138,8 @@ class Compression:
 
     def getFaces(self, v1, v2, v3):
         for face in self.triangles:
-            if face.composedOf( v1, v2, v3):
+            print("self.vertices", [n.index for n in face.vertices])
+            if face.composedOf(v1, v2, v3):
                 return face
 
     def remaping(self, minVertice, maxVertice):

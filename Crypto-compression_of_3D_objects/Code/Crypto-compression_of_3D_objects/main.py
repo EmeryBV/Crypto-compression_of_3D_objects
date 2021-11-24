@@ -9,7 +9,6 @@ def create_compress_file(filename):
     file = open(filename, "w")
     return file
 
-
 if __name__ == '__main__':
     filename = "compressedMesh.txt"
     file = create_compress_file(filename)
@@ -18,14 +17,13 @@ if __name__ == '__main__':
     # meshFile = "./Mesh/OBJ/simpleSphere.obj"
     vertices, faces = readMesh(meshFile)
     # decompression = Decompression()
-    compression = Compression(vertices, faces)
+    compression = Compression(vertices, faces,filename)
     # print(faces[0].vertices)
     # compression.quantification(20)
-    compression.encodeConnectivity(filename)
+    compression.encodeConnectivity()
     quantifyMesh = "quantifyMesh.obj"
-    compressMeshHuffman = "meshCompressHuffman.txt"
+    # compressMeshHuffman = "meshCompressHuffman.txt"
     # compression.quantification(256, quantifyMesh,compressMeshHuffman)
-
     # print(textUncompress)
 
     # print(TextConvertToString)
