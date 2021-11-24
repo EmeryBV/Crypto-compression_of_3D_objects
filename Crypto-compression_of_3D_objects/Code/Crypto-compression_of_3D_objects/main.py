@@ -1,5 +1,3 @@
-import sys
-import huffman
 
 from Parser import readMesh
 from Compression import Compression

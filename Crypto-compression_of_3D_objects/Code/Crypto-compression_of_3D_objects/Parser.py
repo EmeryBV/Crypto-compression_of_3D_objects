@@ -37,7 +37,6 @@ def sortNeighbors(mesh):
 def readMesh(file):
     trimesh.util.attach_to_log()
     mesh = trimesh.load_mesh(file, "obj", process=False, maintain_order=True)
-
     meshVertices = np.asarray(mesh.vertices)
     meshTriangles = np.asarray(mesh.faces)
     meshNormals = np.asarray(mesh.vertex_normals)

@@ -14,20 +14,14 @@ class ActiveList:
         return len(self.vertexList) == 0
 
     def split(self, vertex):
-        ALBis = []
+        ALBis = None
         for i in range(0, len(self.vertexList)):
-            # print(self.vertexList[i].index)
             if vertex == self.vertexList[i]:
-                ALBis = ActiveList(self.vertexList[i:])
-                self.vertexList = self.vertexList[0:i + 1]
+                ALBis = ActiveList( self.vertexList[0:i+1] )
+                self.vertexList = self.vertexList[i:]
                 break
-        ALBis.focusVertex = ALBis.vertexList[0]
-        AL = self
-        if len(ALBis.vertexList) >= len(self.vertexList):
-            AL = ALBis
-            ALBis = self
 
-        return AL, ALBis
+        return ALBis
 
     def getOffset(self, vertex):
         result = 0
@@ -41,12 +35,14 @@ class ActiveList:
 
         return result
 
+    def nextFocus(self):
+        self.focusVertex = self.vertexList[0]
+
     def merge(self, AL1, vertex):
         for i in range(len(AL1.vertexList)):
             if AL1.vertexList[i] == vertex:
                 for y in range(0, len(self.vertexList)):
-                    AL1.vertexList.insert(i + y + 1, self.vertexList[
-                        y])  # On ne veut pas copier 2 fois vertex dans la nouvelle liste
+                    AL1.vertexList.insert(i + y + 1, self.vertexList[y])  # On ne veut pas copier 2 fois vertex dans la nouvelle liste
                 break
         print("Vertex in AL Merge =", [n.index for n in AL1.vertexList])
 
@@ -55,7 +51,7 @@ class ActiveList:
         for vertex in self.vertexList:
             if vertex.isFull():
                 self.vertexList.remove(vertex)
-                print("Suppresion de:", vertex.index)
+                print("Suppression de:", vertex.index)
                 deleteVertices.append(vertex)
         return deleteVertices
         # self.focusVertex = self.vertexList[0]
@@ -63,7 +59,7 @@ class ActiveList:
     def nextFreeEdge(self):
         for edge in self.focusVertex.edges:
             if not edge.isEncoded():
-                edge.encode()
+                edge.encodeVertexInFile()
                 return edge
 
         print("nextFreeEdge return None")
