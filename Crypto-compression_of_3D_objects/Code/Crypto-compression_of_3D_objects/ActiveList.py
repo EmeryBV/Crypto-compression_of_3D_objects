@@ -7,7 +7,6 @@ class ActiveList:
     def addVertex(self, vertex):
         self.vertexList.append(vertex)
 
-
     def contains(self, vertex):
         return vertex in self.vertexList
 
