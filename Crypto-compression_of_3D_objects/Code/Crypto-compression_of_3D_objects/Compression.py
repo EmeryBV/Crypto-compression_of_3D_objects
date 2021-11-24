@@ -33,7 +33,7 @@ class Compression:
         for edge in startFace.edges:
             edge.encode()
 
-        AL = ActiveList(startVertices)
+        AL = ActiveList(startVertices.copy())
 
         AL.focusVertex = startVertices[0]
         # vertexFocus = startVertices[random.randint(0, 2)]
@@ -53,15 +53,15 @@ class Compression:
 
                 e = AL.nextFreeEdge()
                 u = self.vertices[AL.vertexAlongEdge(e)]
+
                 print("Neighbor vertex u = ", u.index)
                 # print("Valence u=", u.valence)
-                # for AlList in stack:
                 if not u.isEncoded():
-
                     self.encodeFace(u, AL.focusVertex, self.vertices[AL.getPreviousNeighbour(u)])
                     self.encodeVertexInFile( "add", vertex=u, valence=str(u.valence))
                     AL.addVertex(u)
                     # encodedeGeometry(AL)
+
                 elif AL.contains(u):
                     ALBis = AL.split(u)
                     print("Split occuring on ", u.index)
@@ -98,14 +98,8 @@ class Compression:
 
     def encodeFace(self, v1, v2, v3):
         face = self.getFaces(v1, v2, v3)
-        print("ahaha")
-        print(v1.index)
-        print(v2.index)
-        print(v3.index)
         for edge in face.edges:
-            print(edge.vertices)
             if not edge.isEncoded():
-                print("here")
                 edge.encode()
 
     def encodeVertexInFile(self, instruction, vertex , valence=None, offset=None, index=None):
@@ -138,7 +132,6 @@ class Compression:
 
     def getFaces(self, v1, v2, v3):
         for face in self.triangles:
-            print("self.vertices", [n.index for n in face.vertices])
             if face.composedOf(v1, v2, v3):
                 return face
 

@@ -21,6 +21,11 @@ class ActiveList:
                 self.vertexList = self.vertexList[i:]
                 break
 
+        temp = self.vertexList
+        if len( self.vertexList ) < len( ALBis.vertexList ):
+            self.vertexList  = ALBis.vertexList
+            ALBis.vertexList = temp
+
         return ALBis
 
     def getOffset(self, vertex):
