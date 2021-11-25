@@ -1,6 +1,6 @@
-
 from Parser import readMesh
 from Compression import Compression
+from Decompression import Decompression
 
 from Decompression import Decompression
 
@@ -8,6 +8,7 @@ from Decompression import Decompression
 def create_compress_file(filename):
     file = open(filename, "w")
     return file
+
 
 if __name__ == '__main__':
     filename = "compressedMesh.txt"
@@ -17,11 +18,14 @@ if __name__ == '__main__':
     # meshFile = "./Mesh/OBJ/simpleSphere.obj"
     vertices, faces = readMesh(meshFile)
     # decompression = Decompression()
-    compression = Compression(vertices, faces,filename)
+    compression = Compression(vertices, faces, filename)
     # print(faces[0].vertices)
     # compression.quantification(20)
     compression.encodeConnectivity()
     quantifyMesh = "quantifyMesh.obj"
+    print("//////////////////////DECOMPRESSION//////////////////////")
+    decompression = Decompression()
+    decompression.decodeConnectivity(filename)
     # compressMeshHuffman = "meshCompressHuffman.txt"
     # compression.quantification(256, quantifyMesh,compressMeshHuffman)
     # print(textUncompress)
