@@ -1,6 +1,8 @@
 import random
 
+import Parser
 from Edge import Edge
+from Face import Face
 from Vertex import Vertex
 from ActiveList import ActiveList
 import re
@@ -10,10 +12,11 @@ import decimal as dc
 
 class Decompression:
 
-    def __init__(self):
+    def __init__(self, filename):
         self.stack = []
         self.vertices = []
         self.triangles = []
+        self.filename = filename
 
     def initFirstTriangle(self, v1, v2, v3):
 
@@ -22,8 +25,9 @@ class Decompression:
 
         v1.addEdge([v2, v3])
         v2.addEdge([v3])
-    def decodeConnectivity(self, filename):
-        file = open(filename, 'r')
+
+    def decodeConnectivity(self):
+        file = open(self.filename, 'r')
         v1 = file.readline()
         v2 = file.readline()
         v3 = file.readline()
@@ -62,11 +66,11 @@ class Decompression:
                     for vertex in self.vertices:
                         if vertex.isValenceFull():
                             valenceFocusVertex = int(vertex.valence)
-                            for k in range(1,valenceFocusVertex):
+                            for k in range(1, valenceFocusVertex):
 
-                                if not vertex.neighbors[k-1].containEdge(vertex.neighbors[k-1],vertex.neighbors[k]
-                                                                                 ) and not vertex.neighbors[k-1].isValenceFull() and not vertex.neighbors[k].isValenceFull():
-
+                                if not vertex.neighbors[k - 1].containEdge(vertex.neighbors[k - 1], vertex.neighbors[k]
+                                                                           ) and not vertex.neighbors[
+                                    k - 1].isValenceFull() and not vertex.neighbors[k].isValenceFull():
                                     vertex.neighbors[k - 1].addNeighbors([vertex.neighbors[k]])
                                     vertex.neighbors[k - 1].addEdge([vertex.neighbors[k]])
                                 # if k==valenceFocusVertex and not vertex.neighbors[k].isValenceFull() and not vertex.neighbors[0].isValenceFull():
@@ -78,32 +82,105 @@ class Decompression:
                 AL.removeFullVerticesValence()
             command = file.readline()
             if ("order" in command):
-                traverselOrder = convertToListInt(command)
+                self.associateCorrectIndex(command)
 
-                for i in range(len(traverselOrder)):
-                    self.vertices[i].index = traverselOrder[i]
-
+            self.decodeGeometry(file)
             for k in range(len(self.vertices)):
                 print("index = " + str(self.vertices[k].index))
                 print("Voisin= ", [n.index for n in self.vertices[k].neighbors])
                 print("Edge= ", [n.vertices for n in self.vertices[k].edges])
+                print("position= ", [n for n in self.vertices[k].position])
                 print("\n")
+                self.orderVerticeList()
+            self.makeTriangle()
+            for triangle in self.triangles:
+                print("position= ", [n.index for n in triangle.vertices])
+            self.writeDecompressFile("decompresseMesh.obj")
 
-    def decode(self, filename, instruction, valence=None, offset=None, index=None):
-        file = open(filename, "w")
+    def makeTriangle(self):
+        for vertex in self.vertices:
+            for vertexNeigh in vertex.neighbors:
+                for vertex1Neighbors in vertexNeigh.neighbors:
 
-        if instruction == "add":
-            line = " ".join([instruction, str(valence)])
-        elif instruction == "split":
-            line = " ".join([instruction, str(offset)])
-        else:
-            line = " ".join([instruction, str(index), str(offset)])
+                    if vertex1Neighbors in vertexNeigh.neighbors and vertex1Neighbors in vertex.neighbors:
+                        # print(vertex.index)
+                        # print(vertex.neighbors[vertexNeigh - 1].index)
+                        # print(vertex.neighbors[vertexNeigh].index)
+                        # print("\n")
+                        triangle = [vertex, vertex1Neighbors, vertexNeigh]
+                        if not self.alreadyContainTriangle(triangle):
+                            self.triangles.append(Face(triangle))
 
-        file.write(line + "\n")
+    def decodeGeometry(self, file):
+        command = file.readline()
+        index = 0
+        while ("v" in command):
+            self.associateCorrectCoord(command, index)
+            command = file.readline()
+            index += 1
+
+        index = 0
+        while ("n" in command):
+            # print("here")
+            self.associateCorrectNormal(command, index)
+            command = file.readline()
+            index += 1
+
+    def orderVerticeList(self):
+        change = True
+        while change:
+            change = False
+            for i in range(1,len(self.vertices)):
+                # print(self.vertices[i-1].index)
+                # print(self.vertices[i].index)
+                if self.vertices[i-1].index > self.vertices[i].index:
+                    temp =self.vertices[i-1]
+                    self.vertices[i - 1] = self.vertices[i]
+                    self.vertices[i] = temp
+                    change = True
+
+
+    def associateCorrectIndex(self, command):
+        traverselOrder = convertToListInt(command)
+        self.vertices[1].index = 2
+        self.vertices[2].index = 1
+        for i in range(0, len(traverselOrder)):
+            # print(self.vertices[i + 3].index)
+            # print(traverselOrder[i])
+            self.vertices[i + 3].index = int(traverselOrder[i])
+
+    def alreadyContainTriangle(self, triangleList):
+        for triangle in self.triangles:
+            if triangleList[0] in triangle.vertices and triangleList[1] in triangle.vertices and triangleList[2] in triangle.vertices:
+                return True
+        return False
+
+    def associateCorrectCoord(self, command, index):
+        coordList = convertToListInt(command)
+        for vertex in self.vertices:
+            if vertex.index == index:
+                vertex.position = coordList
+
+    def associateCorrectNormal(self, command, index):
+        coordList = convertToListInt(command)
+        for vertex in self.vertices:
+            # print(index)
+            if vertex.index == index:
+
+
+                vertex.normal = coordList
+
+    def writeDecompressFile(self, filename):
+        Parser.writeMesh(self.vertices, self.triangles, filename)
+
+    # def repairMesh(self):
+    #     for triangle in self.triangles:
 
 
 def convertToInt(instruction):
-    return re.findall(r'\d', instruction)[0]
+
+    return re.findall(r"[-+]?\d*\.\d+|\d+", instruction)[0]
+
 
 def convertToListInt(instruction):
-    return re.findall(r'\d', instruction)
+    return re.findall(r"[-+]?\d*\.*\d+", instruction)

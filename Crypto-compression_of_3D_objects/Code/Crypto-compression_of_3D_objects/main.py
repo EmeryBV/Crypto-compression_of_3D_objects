@@ -20,12 +20,13 @@ if __name__ == '__main__':
     # decompression = Decompression()
     compression = Compression(vertices, faces, filename)
     # print(faces[0].vertices)
-    # compression.quantification(20)
+
     compression.encodeConnectivity()
+    compression.encodeGeometry()
     quantifyMesh = "quantifyMesh.obj"
     print("//////////////////////DECOMPRESSION//////////////////////")
-    decompression = Decompression()
-    decompression.decodeConnectivity(filename)
+    # decompression = Decompression(filename)
+    # decompression.decodeConnectivity()
     # compressMeshHuffman = "meshCompressHuffman.txt"
     # compression.quantification(256, quantifyMesh,compressMeshHuffman)
     # print(textUncompress)

@@ -3,7 +3,7 @@ from Edge import Edge
 
 class Vertex:
 
-    def __init__(self, index, position, neighbors, edges=None, valence=None):
+    def __init__(self, index, position, neighbors, edges=None, valence=None, normal = None):
         if edges is None:
             edges = []
         self.index = index
@@ -16,6 +16,7 @@ class Vertex:
             self.valence = valence
         self.focusVertex = False
         self.encoded = False
+        self.normal = normal
 
     def setFocus(self, state):
         self.focusVertex = state

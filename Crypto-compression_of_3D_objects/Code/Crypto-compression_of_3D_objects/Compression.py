@@ -29,9 +29,9 @@ class Compression:
         self.encodeVertexInFile("add", vertex=startVertices[0], valence=startVertices[0].valence)
         self.encodeVertexInFile("add", vertex=startVertices[1], valence=startVertices[1].valence)
         self.encodeVertexInFile("add", vertex=startVertices[2], valence=startVertices[2].valence)
-        traversalOrder.append(startVertices[0].index)
-        traversalOrder.append(startVertices[1].index)
-        traversalOrder.append(startVertices[2].index)
+        # traversalOrder.append(startVertices[0].index)
+        # traversalOrder.append(startVertices[1].index)
+        # traversalOrder.append(startVertices[2].index)
         for edge in startFace.edges:
             edge.encode()
 
@@ -65,12 +65,12 @@ class Compression:
                     # encodedeGeometry(AL)
 
                 elif AL.contains(u):
-                    # ALBis = AL.split(u)
+                    ALBis = AL.split(u)
                     print("Split occuring on ", u.index)
-                    # print("AL : ", [k.index for k in AL.vertexList], "ALBis : ", [k.index for k in ALBis.vertexList])
-                    # self.stack.append(ALBis)
-                    # self.encodeVertexInFile("split", vertex=u, offset=str(AL.getOffset(u)))
-                    # # print("Vertex in ALBIS =", [n.index for n in ALBis.vertexList])
+                    print("AL : ", [k.index for k in AL.vertexList], "ALBis : ", [k.index for k in ALBis.vertexList])
+                    self.stack.append(ALBis)
+                    self.encodeVertexInFile("split", vertex=u, offset=str(AL.getOffset(u)))
+                    # print("Vertex in ALBIS =", [n.index for n in ALBis.vertexList])
                 else:
                     for AList in self.stack:
                         if AList.contains(u):
@@ -92,20 +92,19 @@ class Compression:
         for index in traversalOrder:
             line += "".join(str(index)) + " "
         file = open(self.filename, "a")
-        file.write("order "+line + "\n")
+        file.write("order " + line + "\n")
         file.close()
 
+    def writeNormal(self):
+        file = open(self.filename, "a")
 
-    def encodeGeometry(self, AL):
+        for vertex in self.vertices:
+            line = ""
+            for i in range(0,3):
+                line += "".join(str(vertex.normal[i])) + " "
+            file.write("n " + line + "\n")
 
-        vertex = AL[len(AL) - 1]
-        predictVertex = prediction(AL[0].position, AL[len(AL) - 2].position, AL[len(AL) - 3].position)
-        # print(vertex.position)
-        # print(predictVertex)
-        result = vertex.position - predictVertex
-        # print(result)
-        # print("\n")
-
+        file.close()
     def encodeFace(self, v1, v2, v3):
         face = self.getFaces(v1, v2, v3)
         if face is not None and v1 != v2 and v2 != v3 and v1 != v3:
@@ -218,14 +217,34 @@ class Compression:
             l += 1
         return verticeDequantifie
 
-    def quantification(self, precision, filenameMeshQuantify, filenameCompressHuffman):
+    def quantification(self, precision):
         minVertice, maxVertice = self.getBoundingBox()
         normalizePoint = self.remaping(minVertice, maxVertice)
         quantifiedVertices = self.quantifyVertices(normalizePoint, precision)
-        verticeDequantifie = self.dequantificationVertices(quantifiedVertices, precision)
-        reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
-        Parser.writeMesh(quantifiedVertices, self.triangles, filenameMeshQuantify)
-        compressWithHuffman(filenameMeshQuantify, filenameCompressHuffman)
+        return quantifiedVertices
+        # verticeDequantifie = self.dequantificationVertices(quantifiedVertices, precision)
+        # reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
+        # Parser.writeMesh(quantifiedVertices, self.triangles, filenameMeshQuantify)
+
+    def encodeGeometry(self):
+        file = open(self.filename, "a")
+        # quantifiedVertices = self.quantification(1024)
+        for vertex in self.vertices:
+            file.write("v ")
+            for i in range(3):
+                file.write(str(int(vertex.position[i])) + " ")
+            file.write("\n")
+        file.close()
+        self.writeNormal()
+
+        # compressWithHuffman(filenameMeshQuantify, filenameCompressHuffman)
+        # vertex = AL[len(AL) - 1]
+        # predictVertex = prediction(AL[0].position, AL[len(AL) - 2].position, AL[len(AL) - 3].position)
+        # print(vertex.position)
+        # print(predictVertex)
+        # result = vertex.position - predictVertex
+        # print(result)
+        # print("\n")
 
 
 def compressWithHuffman(filenameMeshQuantify, filenameCompressHuffman):
