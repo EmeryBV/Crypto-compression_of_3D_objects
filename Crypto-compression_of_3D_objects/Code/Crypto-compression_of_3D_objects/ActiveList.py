@@ -67,6 +67,8 @@ class ActiveList:
         deleteVertices = []
         for vertex in self.vertexList:
             if vertex.isValenceFull():
+                # print("index = " + str(vertex.index))
+                print("Voisin= ", [n.index for n in vertex.neighbors])
                 print("Suppression de:", vertex.index)
                 deleteVertices.append(vertex)
         for vertexDel in deleteVertices:
@@ -118,15 +120,31 @@ class ActiveList:
         self.focusVertex.addNeighbors([newVertex])
         self.focusVertex.addEdge([newVertex])
 
-        if self.focusVertex.isValenceFull() and int(self.focusVertex.valence) % 2 == 1 and not self.focusVertex.neighbors[0].isValenceFull():
+        if self.focusVertex.isValenceFull() and int(self.focusVertex.valence) % 2 == 1 and not \
+        self.focusVertex.neighbors[0].isValenceFull():
             self.joinFirstAndLastNeigbor(newVertex)
-
         else:
             self.joinNeigborsLink(newVertex)
 
         self.vertexList.append(newVertex)
 
-    def joinNeigborsLink(self,newVertex):
+    def twoVertexNotConnected(self, vertex, vertexText):
+        listVertexFree = []
+
+        cpt = 0
+        for vertexNei in vertexText.neighbors:
+            # print(vertex.index)
+            # print(vertexNei.index)
+            # print(self.focusVertex in vertexNei.neighbors)
+            if vertex in vertexNei.neighbors:
+                cpt += 1
+        # print("cpt =" + str(cpt) )
+        # print("\n")
+        if cpt < 2:
+            return True
+        return False
+
+    def joinNeigborsLink(self, newVertex):
         for neighborsVertex in self.focusVertex.neighbors:
             # print("index", neighborsVertex.index)
             # print("index", neighborsVertex.index)
@@ -135,11 +153,10 @@ class ActiveList:
             # print(newVertex not in neighborsVertex.neighbors)
             # print(self.focusVertex.isValenceFull())
             # print("\n")
-            if neighborsVertex.haveOneFreeEdge() and newVertex not in neighborsVertex.neighbors \
-                    and newVertex != neighborsVertex and self.focusVertex.isValenceFull() :
+            if not neighborsVertex.isValenceFull() and self.twoVertexNotConnected(self.focusVertex,neighborsVertex) and newVertex not in neighborsVertex.neighbors \
+                    and newVertex != neighborsVertex and self.focusVertex.isValenceFull():
                 neighborsVertex.addNeighbors([newVertex])
                 neighborsVertex.addEdge([newVertex])
-
 
     def joinFirstAndLastNeigbor(self, newVertex):
         newVertex.addNeighbors([self.focusVertex.neighbors[0]])

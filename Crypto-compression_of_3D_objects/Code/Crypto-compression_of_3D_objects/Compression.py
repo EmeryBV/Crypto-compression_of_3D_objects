@@ -55,12 +55,13 @@ class Compression:
                 e = AL.nextFreeEdge()
                 u = self.vertices[AL.vertexAlongEdge(e)]
 
-                print("Neighbor vertex u = ", u.index)
                 # print("Valence u=", u.valence)
                 if not u.isEncoded():
+                    print("Ajout du vertice " + str(u.index))
                     for v3 in AL.vertexList:
                         self.encodeFace(u, AL.focusVertex, v3)
                     self.encodeVertexInFile("add", vertex=u, valence=str(u.valence))
+
                     AL.addVertex(u)
                     traversalOrder.append(u.index)
                     # encodedeGeometry(AL)

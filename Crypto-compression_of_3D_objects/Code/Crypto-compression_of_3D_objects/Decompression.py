@@ -69,14 +69,18 @@ class Decompression:
                             valenceFocusVertex = int(vertex.valence)
                             for k in range(1, valenceFocusVertex):
                                 vertex2 = vertex.neighbors[k - 1]
-                                vertex3 = vertex.neighbors[k - 1]
-                                if not vertex.neighbors[k - 1].containEdge(vertex.neighbors[k - 1], vertex.neighbors[k]
-                                                                           ) and not vertex.neighbors[
-                                    k - 1].isValenceFull() and not vertex.neighbors[k].isValenceFull():
-                                    vertex.neighbors[k - 1].addNeighbors([vertex.neighbors[k]])
-                                    vertex.neighbors[k - 1].addEdge([vertex.neighbors[k]])
-
-
+                                vertex3 = vertex.neighbors[k]
+                                if not vertex2.containEdge(vertex2, vertex.neighbors[k]) \
+                                        and not vertex2.isValenceFull() \
+                                        and not vertex3.isValenceFull() \
+                                        and  AL.twoVertexNotConnected(vertex,vertex3) \
+                                        and  AL.twoVertexNotConnected(vertex,vertex2):
+                                    print("je suis la ")
+                                    print(vertex.index)
+                                    print(vertex2.index)
+                                    print(vertex3.index)
+                                    vertex2.addNeighbors([vertex3])
+                                    vertex2.addEdge([vertex3])
 
                                 # if k==valenceFocusVertex and not vertex.neighbors[k].isValenceFull() and not vertex.neighbors[0].isValenceFull():
                                 #     if not vertex.neighbors[k].containEdge(vertex.neighbors[k],  vertex.neighbors[0]):
@@ -89,13 +93,18 @@ class Decompression:
                 self.associateCorrectIndex(command)
 
             self.decodeGeometry(file)
+
             for k in range(len(self.vertices)):
                 print("index = " + str(self.vertices[k].index))
                 print("Voisin= ", [n.index for n in self.vertices[k].neighbors])
                 print("Edge= ", [n.vertices for n in self.vertices[k].edges])
                 print("position= ", [n for n in self.vertices[k].position])
                 print("\n")
-                self.orderVerticeList()
+
+
+
+
+            self.orderVerticeList()
             self.makeTriangle()
             for triangle in self.triangles:
                 print("position= ", [n.index for n in triangle.vertices])
@@ -120,7 +129,6 @@ class Decompression:
         index = 0
         print(command)
         while ("v" in command):
-
             self.associateCorrectCoord(command, index)
             command = file.readline()
             index += 1
@@ -146,8 +154,8 @@ class Decompression:
 
     def associateCorrectIndex(self, command):
         traverselOrder = convertToListInt(command)
-        self.vertices[1].index = 2
-        self.vertices[2].index = 1
+        self.vertices[1].index = 1
+        self.vertices[2].index = 2
         for i in range(0, len(traverselOrder)):
             # print(self.vertices[i + 3].index)
             # print(traverselOrder[i])
