@@ -75,11 +75,16 @@ class ActiveList:
             self.vertexList.remove(vertexDel)
 
     def nextFreeEdge(self):
-        for edge in self.focusVertex.edges:
-            if not edge.isEncoded():
-                edge.encode()
-                print("encode", edge.vertices)
-                return edge
+        print("EDGE de focus = ", [n.vertices for n in self.focusVertex.edges])
+        for i in range(len(self.focusVertex.edges)):
+            if i == 0:
+                edgePred = self.focusVertex.edges[len(self.focusVertex.edges)-1]
+            else:
+                edgePred = self.focusVertex.edges[i-1]
+            if not self.focusVertex.edges[i].isEncoded() and edgePred.isEncoded():
+                self.focusVertex.edges[i].encode()
+                print("encode", self.focusVertex.edges[i].vertices)
+                return self.focusVertex.edges[i]
 
         print("nextFreeEdge return None")
         return None

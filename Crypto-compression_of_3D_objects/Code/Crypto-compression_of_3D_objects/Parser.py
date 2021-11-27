@@ -92,7 +92,7 @@ def writeMesh(listVertice, faces, filename):
     for vertex in listVertice:
         listPosition.append(vertex.position)
         listNormal.append(vertex.normal)
-        # print(vertex.normal)
+        print(vertex.normal)
 
     for triangle in faces:
         listListIndex = []
@@ -100,9 +100,10 @@ def writeMesh(listVertice, faces, filename):
             listListIndex.append(vertex.index)
         listIndex.append(listListIndex)
 
-    # print(listPosition)
-    mesh = trimesh.Trimesh(listPosition, listIndex, process=False, maintain_order=True)
+    mesh = trimesh.Trimesh(listPosition, listIndex, process=False,vertex_normals=listNormal, maintain_order=True)
+
     trimesh.repair.fix_winding(mesh)
-    meshText = trimesh.exchange.obj.export_obj(mesh,digits=0)
+
+    meshText = trimesh.exchange.obj.export_obj(mesh,include_normals = True,digits=0)
     file = open(filename, "w")
     file.write(meshText)

@@ -45,9 +45,8 @@ class Decompression:
             AL = self.stack.pop(len(self.stack) - 1)
             command = ""
             while AL.vertexList and not "order" in command:
-                command = file.readline()
-                if command == "":
-                    emptyList = True
+
+
                 print(command)
                 AL.focusVertex = AL.nextfreeEdgeDecode()
                 print("FOCUS VERTEX = ", AL.focusVertex.index)
@@ -88,7 +87,16 @@ class Decompression:
                                 #         vertex.neighbors[k].addNeighbors([vertex.neighbors[0]])
                                 #         vertex.neighbors[k].addEdge([vertex.neighbors[0]])
                 AL.removeFullVerticesValence()
-            command = file.readline()
+                command = file.readline()
+            # command = file.readline()
+            for k in range(len(self.vertices)):
+                print("index = " + str(self.vertices[k].index))
+                print("Voisin= ", [n.index for n in self.vertices[k].neighbors])
+                print("Edge= ", [n.vertices for n in self.vertices[k].edges])
+                print("position= ", [n for n in self.vertices[k].position])
+                print("\n")
+
+            print(command)
             if ("order" in command):
                 self.associateCorrectIndex(command)
 
@@ -100,8 +108,6 @@ class Decompression:
                 print("Edge= ", [n.vertices for n in self.vertices[k].edges])
                 print("position= ", [n for n in self.vertices[k].position])
                 print("\n")
-
-
 
 
             self.orderVerticeList()
@@ -125,9 +131,12 @@ class Decompression:
                             self.triangles.append(Face(triangle))
 
     def decodeGeometry(self, file):
+
         command = file.readline()
+        print("ici")
+
         index = 0
-        print(command)
+
         while ("v" in command):
             self.associateCorrectCoord(command, index)
             command = file.readline()
@@ -154,12 +163,12 @@ class Decompression:
 
     def associateCorrectIndex(self, command):
         traverselOrder = convertToListInt(command)
-        self.vertices[1].index = 1
-        self.vertices[2].index = 2
-        for i in range(0, len(traverselOrder)):
-            # print(self.vertices[i + 3].index)
-            # print(traverselOrder[i])
-            self.vertices[i + 3].index = int(traverselOrder[i])
+
+        for i in range(len(traverselOrder)):
+            print(self.vertices[i].index)
+            print(traverselOrder[i])
+            print("\n")
+            self.vertices[i].index = int(traverselOrder[i])
 
     def alreadyContainTriangle(self, triangleList):
         for triangle in self.triangles:

@@ -19,7 +19,7 @@ class Compression:
         self.filename = filename
 
     def getStartTriangle(self):
-        return self.triangles[0]
+        return self.triangles[random.randint(0, len(self.triangles) - 1)]
 
     def encodeConnectivity(self):
         traversalOrder = []
@@ -29,9 +29,9 @@ class Compression:
         self.encodeVertexInFile("add", vertex=startVertices[0], valence=startVertices[0].valence)
         self.encodeVertexInFile("add", vertex=startVertices[1], valence=startVertices[1].valence)
         self.encodeVertexInFile("add", vertex=startVertices[2], valence=startVertices[2].valence)
-        # traversalOrder.append(startVertices[0].index)
-        # traversalOrder.append(startVertices[1].index)
-        # traversalOrder.append(startVertices[2].index)
+        traversalOrder.append(startVertices[0].index)
+        traversalOrder.append(startVertices[1].index)
+        traversalOrder.append(startVertices[2].index)
         for edge in startFace.edges:
             edge.encode()
 
@@ -106,12 +106,13 @@ class Compression:
         file.write("order " + line + "\n")
         file.close()
 
-    def writeNormal(self):
+    def writeNormal(self,listQuantifiedNormals):
         file = open(self.filename, "a")
 
-        for vertex in self.vertices:
+        for vertex in listQuantifiedNormals:
             line = ""
             for i in range(0, 3):
+
                 line += "".join(str(vertex.normal[i])) + " "
             file.write("n " + line + "\n")
 
@@ -139,7 +140,7 @@ class Compression:
         file.write(line + "\n")
         file.close()
 
-    def getBoundingBox(self):
+    def getBoundingBoxVertices(self):
         minVertice = [10000, 10000, 10000]
         maxVertice = [0, 0, 0]
 
@@ -153,36 +154,55 @@ class Compression:
         # print(maxVertice)
         return minVertice, maxVertice
 
+    def getBoundingBoxNormal(self):
+        minNormal = [10000, 10000, 10000]
+        maxNormal = [0, 0, 0]
+
+        for vertex in self.vertices:
+            for i in range(3):
+                if vertex.normal[i] < minNormal[i]:
+                    minNormal[i] = vertex.normal[i]
+                if vertex.normal[i] > maxNormal[i]:
+                    maxNormal[i] = vertex.normal[i]
+        return minNormal, maxNormal
+
     def getFaces(self, v1, v2, v3):
         for face in self.triangles:
             if face.composedOf(v1, v2, v3):
                 return face
 
-    def remaping(self, minVertice, maxVertice):
+    def remapingVertices(self, minVertices, maxVertices):
         pointNormalize = (len(self.vertices)) * [None]
         sumExtremum = []
         for i in range(3):
-            sumExtremum.append(abs(minVertice[i]) + abs(maxVertice[i]))
+            sumExtremum.append(abs(minVertices[i]) + abs(maxVertices[i]))
         l = 0
         for vertex in self.vertices:
-            # print(vertex.position)
             normalizeVertex = []
             normalizeVertex.clear()
             for i in range(0, 3):
-                normalizeVertex.append((vertex.position[i] + abs(minVertice[i])) / sumExtremum[i])
-            # print(normalizeVertex)
+                normalizeVertex.append((vertex.position[i] + abs(minVertices[i])) / sumExtremum[i])
             newVertex = 0
             newVertex = Vertex(vertex.index, normalizeVertex.copy(), vertex.neighbors, [])
             pointNormalize[l] = newVertex
-
-            # print(pointNormalize[l].position)
-            # print(pointNormalize)
-
-            # print("\n")
             l += 1
-        # print("\n")
-        # print("aaa")
+        return pointNormalize
 
+    def remapingNormals(self, minNormals, maxNormals):
+        pointNormalize = (len(self.vertices)) * [None]
+        sumExtremum = []
+        for i in range(3):
+            sumExtremum.append(abs(minNormals[i]) + abs(maxNormals[i]))
+        l = 0
+        for vertex in self.vertices:
+            normalizeNormals = []
+            normalizeNormals.clear()
+            for i in range(0, 3):
+                normalizeNormals.append((vertex.normal[i] + abs(minNormals[i])) / sumExtremum[i])
+            newVertex = 0
+            newVertex = Vertex(vertex.index, vertex.position, vertex.neighbors, [],normal = normalizeNormals.copy())
+            pointNormalize[l] = newVertex
+            l += 1
         return pointNormalize
 
     def remapingInv(self, pointNormalize, minVertice, maxVertice):
@@ -215,6 +235,19 @@ class Compression:
             l += 1
         return quantifiedVertices
 
+    def quantifyNormals(self, pointNormalizeNormals, coefficient):
+        quantifiedNormals= len(pointNormalizeNormals) * [None]
+        l = 0
+        for vertex in pointNormalizeNormals:
+            verticesQuantifieNormals = []
+            for i in range(3):
+                print(vertex.normal)
+                verticesQuantifieNormals.append(round(vertex.normal[i] * coefficient))
+            normalsQuantifie = Vertex(vertex.index, vertex.position, vertex.neighbors,normal = verticesQuantifieNormals.copy())
+            quantifiedNormals[l] = normalsQuantifie
+            l += 1
+        return quantifiedNormals
+
     def dequantificationVertices(self, quantifiedVertices, coefficient):
         verticeDequantifie = len(quantifiedVertices) * [None]
         l = 0
@@ -230,10 +263,14 @@ class Compression:
         return verticeDequantifie
 
     def quantification(self, precision):
-        minVertice, maxVertice = self.getBoundingBox()
-        normalizePoint = self.remaping(minVertice, maxVertice)
-        quantifiedVertices = self.quantifyVertices(normalizePoint, precision)
-        return quantifiedVertices
+        minVertices, maxVertices = self.getBoundingBoxVertices()
+        normalizePointVertices = self.remapingVertices(minVertices, maxVertices)
+        quantifiedVertices = self.quantifyVertices(normalizePointVertices, precision)
+
+        minNormals, maxNormals = self.getBoundingBoxNormal()
+        normalizePointNormals = self.remapingNormals(minNormals, maxNormals)
+        quantifiedNormals = self.quantifyNormals(normalizePointNormals, precision*10)
+        return quantifiedVertices, quantifiedNormals
         # verticeDequantifie = self.dequantificationVertices(quantifiedVertices, precision)
         # reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
         # Parser.writeMesh(quantifiedVertices, self.triangles, filenameMeshQuantify)
@@ -241,14 +278,15 @@ class Compression:
     def encodeGeometry(self):
         file = open(self.filename, "a")
 
-        quantifiedVertices = self.quantification(1024)
+        quantifiedVertices, quantifiedNormals = self.quantification(1024)
+
         for vertex in quantifiedVertices:
             file.write("v ")
             for i in range(3):
                 file.write(str(int(vertex.position[i])) + " ")
             file.write("\n")
         file.close()
-        self.writeNormal()
+        self.writeNormal(quantifiedNormals)
 
         # compressWithHuffman(filenameMeshQuantify, filenameCompressHuffman)
         # vertex = AL[len(AL) - 1]
