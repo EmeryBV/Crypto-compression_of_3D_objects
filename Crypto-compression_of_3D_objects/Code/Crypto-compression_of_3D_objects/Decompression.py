@@ -43,7 +43,8 @@ class Decompression:
         emptyList = False
         while self.stack and not emptyList:
             AL = self.stack.pop(len(self.stack) - 1)
-            while AL.vertexList:
+            command = ""
+            while AL.vertexList and not "order" in command:
                 command = file.readline()
                 if command == "":
                     emptyList = True
@@ -67,18 +68,21 @@ class Decompression:
                         if vertex.isValenceFull():
                             valenceFocusVertex = int(vertex.valence)
                             for k in range(1, valenceFocusVertex):
-
+                                vertex2 = vertex.neighbors[k - 1]
+                                vertex3 = vertex.neighbors[k - 1]
                                 if not vertex.neighbors[k - 1].containEdge(vertex.neighbors[k - 1], vertex.neighbors[k]
                                                                            ) and not vertex.neighbors[
                                     k - 1].isValenceFull() and not vertex.neighbors[k].isValenceFull():
                                     vertex.neighbors[k - 1].addNeighbors([vertex.neighbors[k]])
                                     vertex.neighbors[k - 1].addEdge([vertex.neighbors[k]])
+
+
+
                                 # if k==valenceFocusVertex and not vertex.neighbors[k].isValenceFull() and not vertex.neighbors[0].isValenceFull():
                                 #     if not vertex.neighbors[k].containEdge(vertex.neighbors[k],  vertex.neighbors[0]):
                                 #         print("Je rentre dans la boucle")
                                 #         vertex.neighbors[k].addNeighbors([vertex.neighbors[0]])
                                 #         vertex.neighbors[k].addEdge([vertex.neighbors[0]])
-
                 AL.removeFullVerticesValence()
             command = file.readline()
             if ("order" in command):
@@ -114,14 +118,15 @@ class Decompression:
     def decodeGeometry(self, file):
         command = file.readline()
         index = 0
+        print(command)
         while ("v" in command):
+
             self.associateCorrectCoord(command, index)
             command = file.readline()
             index += 1
 
         index = 0
         while ("n" in command):
-            # print("here")
             self.associateCorrectNormal(command, index)
             command = file.readline()
             index += 1
@@ -130,15 +135,14 @@ class Decompression:
         change = True
         while change:
             change = False
-            for i in range(1,len(self.vertices)):
+            for i in range(1, len(self.vertices)):
                 # print(self.vertices[i-1].index)
                 # print(self.vertices[i].index)
-                if self.vertices[i-1].index > self.vertices[i].index:
-                    temp =self.vertices[i-1]
+                if self.vertices[i - 1].index > self.vertices[i].index:
+                    temp = self.vertices[i - 1]
                     self.vertices[i - 1] = self.vertices[i]
                     self.vertices[i] = temp
                     change = True
-
 
     def associateCorrectIndex(self, command):
         traverselOrder = convertToListInt(command)
@@ -151,7 +155,8 @@ class Decompression:
 
     def alreadyContainTriangle(self, triangleList):
         for triangle in self.triangles:
-            if triangleList[0] in triangle.vertices and triangleList[1] in triangle.vertices and triangleList[2] in triangle.vertices:
+            if triangleList[0] in triangle.vertices and triangleList[1] in triangle.vertices and triangleList[
+                2] in triangle.vertices:
                 return True
         return False
 
@@ -166,8 +171,6 @@ class Decompression:
         for vertex in self.vertices:
             # print(index)
             if vertex.index == index:
-
-
                 vertex.normal = coordList
 
     def writeDecompressFile(self, filename):
@@ -178,7 +181,6 @@ class Decompression:
 
 
 def convertToInt(instruction):
-
     return re.findall(r"[-+]?\d*\.\d+|\d+", instruction)[0]
 
 

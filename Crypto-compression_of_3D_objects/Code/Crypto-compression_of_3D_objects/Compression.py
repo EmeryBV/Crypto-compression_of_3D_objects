@@ -47,6 +47,7 @@ class Compression:
             AL = self.stack.pop(len(self.stack) - 1)
 
             while AL.vertexList:
+                print("\n")
                 print("FOCUS VERTEX = ", AL.focusVertex.index)
                 print("Vertex in AL = ", [n.index for n in AL.vertexList])
                 print("NEIGHBORS = ", [n for n in AL.focusVertex.neighbors])
@@ -81,6 +82,15 @@ class Compression:
                             # AL = AList
                             self.stack.remove(AList)
                             break
+
+                for vertex in self.vertices:
+                    if vertex.isFull():
+                        valenceVertex = int(vertex.valence)
+                        for k in range(0, valenceVertex):
+                            vertex2 = self.vertices[vertex.neighbors[k - 1]]
+                            vertex3 = self.vertices[vertex.neighbors[k]]
+                            if not vertex2.getEdge(vertex2, vertex3).isEncoded() and not vertex2.isFull() and not vertex3.isFull():
+                                self.encodeFace(vertex, vertex2, vertex3)
                 AL.removeFullVertices()
                 for AL2 in self.stack:
                     AL2.removeFullVertices()
@@ -100,11 +110,12 @@ class Compression:
 
         for vertex in self.vertices:
             line = ""
-            for i in range(0,3):
+            for i in range(0, 3):
                 line += "".join(str(vertex.normal[i])) + " "
             file.write("n " + line + "\n")
 
         file.close()
+
     def encodeFace(self, v1, v2, v3):
         face = self.getFaces(v1, v2, v3)
         if face is not None and v1 != v2 and v2 != v3 and v1 != v3:
@@ -228,8 +239,9 @@ class Compression:
 
     def encodeGeometry(self):
         file = open(self.filename, "a")
-        # quantifiedVertices = self.quantification(1024)
-        for vertex in self.vertices:
+
+        quantifiedVertices = self.quantification(1024)
+        for vertex in quantifiedVertices:
             file.write("v ")
             for i in range(3):
                 file.write(str(int(vertex.position[i])) + " ")

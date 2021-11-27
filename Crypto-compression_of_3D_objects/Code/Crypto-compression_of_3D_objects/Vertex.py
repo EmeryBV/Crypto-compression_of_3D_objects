@@ -44,6 +44,11 @@ class Vertex:
                 return True
         return False
 
+    def getEdge(self, v1,v2):
+        for edge in self.edges:
+            if v1.index in edge.vertices and v2.index in edge.vertices:
+                return edge
+        return None
     def haveOneFreeEdge(self):
         # print(int(self.valence) )
         # print(len(self.neighbors)+1 )

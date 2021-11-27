@@ -76,6 +76,7 @@ class ActiveList:
         for edge in self.focusVertex.edges:
             if not edge.isEncoded():
                 edge.encode()
+                print("encode", edge.vertices)
                 return edge
 
         print("nextFreeEdge return None")

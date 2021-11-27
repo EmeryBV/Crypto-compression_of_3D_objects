@@ -14,7 +14,7 @@ if __name__ == '__main__':
     filename = "compressedMesh.txt"
     file = create_compress_file(filename)
     # file.write("test.obj")
-    meshFile = "./Mesh/OBJ/cube.obj"
+    meshFile = "./Mesh/OBJ/simpleSphere.obj"
     # meshFile = "./Mesh/OBJ/simpleSphere.obj"
     vertices, faces = readMesh(meshFile)
     # decompression = Decompression()
@@ -25,8 +25,8 @@ if __name__ == '__main__':
     compression.encodeGeometry()
     quantifyMesh = "quantifyMesh.obj"
     print("//////////////////////DECOMPRESSION//////////////////////")
-    # decompression = Decompression(filename)
-    # decompression.decodeConnectivity()
+    decompression = Decompression(filename)
+    decompression.decodeConnectivity()
     # compressMeshHuffman = "meshCompressHuffman.txt"
     # compression.quantification(256, quantifyMesh,compressMeshHuffman)
     # print(textUncompress)
