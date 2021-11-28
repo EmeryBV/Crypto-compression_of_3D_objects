@@ -29,23 +29,24 @@ class Compression:
         self.encodeVertexInFile("add", vertex=startVertices[0], valence=startVertices[0].valence)
         self.encodeVertexInFile("add", vertex=startVertices[1], valence=startVertices[1].valence)
         self.encodeVertexInFile("add", vertex=startVertices[2], valence=startVertices[2].valence)
+
         traversalOrder.append(startVertices[0].index)
         traversalOrder.append(startVertices[1].index)
         traversalOrder.append(startVertices[2].index)
+
         for edge in startFace.edges:
             edge.encode()
 
         AL = ActiveList(startVertices.copy())
-
-        AL.focusVertex = startVertices[0]
-        AL.sortFocusVertexNeighbors( self.vertices )
-        # vertexFocus = startVertices[random.randint(0, 2)]
-        # vertexFocus.setFocus(True)
-
         self.stack.append(AL)
 
         while self.stack:
+
             AL = self.stack.pop(len(self.stack) - 1)
+            AL.nextFocus()
+            print(AL.focusVertex)
+
+            AL.sortFocusVertexNeighbors(self.vertices)
 
             while AL.vertexList:
                 print("\n")
@@ -54,53 +55,57 @@ class Compression:
                 print("NEIGHBORS = ", [n for n in AL.focusVertex.neighbors])
 
                 e = AL.nextFreeEdge()
-                u = self.vertices[AL.vertexAlongEdge(e)]
+                if e:
 
-                if not u.isEncoded():
-                    print("Ajout du vertice " + str(u.index))
-                    for v3 in AL.vertexList:
-                        self.encodeFace(u, AL.focusVertex, v3)
-                    self.encodeVertexInFile("add", vertex=u, valence=str(u.valence))
+                    u = self.vertices[AL.vertexAlongEdge(e)]
 
-                    AL.addVertex(u)
-                    traversalOrder.append(u.index)
-                    # encodedeGeometry(AL)
+                    if not u.isEncoded():
+                        print("Ajout du vertice " + str(u.index))
+                        self.encodeFace(u, AL.focusVertex, AL.vertexList[ len(AL.vertexList) -1 ])
+                        self.encodeVertexInFile("add", vertex=u, valence=str(u.valence))
 
-                elif AL.contains(u):
-                    ALBis = AL.split(u)
-                    print("Split occuring on ", u.index)
-                    print("AL : ", [k.index for k in AL.vertexList], "ALBis : ", [k.index for k in ALBis.vertexList])
-                    self.stack.append(ALBis)
-                    self.encodeVertexInFile("split", vertex=u, offset=str(AL.getOffset(u)))
+                        AL.addVertex(u)
+                        traversalOrder.append(u.index)
+                        # encodedeGeometry(AL)
 
-                else:
-                    for AList in self.stack:
-                        if AList.contains(u):
-                            print("Vertex where u is found ", [n.index for n in AList.vertexList])
-                            self.encodeVertexInFile("merge", vertex=u, index=u.index,
-                                                    offset=str(AL.getOffset(u)))
-                            AL.merge(AList, u)
-                            # AL = AList
-                            self.stack.remove(AList)
-                            break
+                    elif AL.contains(u):
+                        ALBis = AL.split(u)
+                        print("Split occuring on ", u.index)
+                        # print("AL : ", [k.index for k in AL.vertexList], "ALBis : ", [k.index for k in ALBis.vertexList])
+                        self.stack.append(ALBis)
+                        self.encodeVertexInFile("split", vertex=u, offset=str(AL.getOffset(u)))
 
-                for vertex in self.vertices:
-                    if vertex.isFull():
-                        valenceVertex = int(vertex.valence)
-                        for k in range(0, valenceVertex):
-                            vertex2 = self.vertices[vertex.neighbors[k - 1]]
-                            vertex3 = self.vertices[vertex.neighbors[k]]
-                            if not vertex2.getEdge(vertex2, vertex3).isEncoded() and not vertex2.isFull() and not vertex3.isFull():
-                                self.encodeFace(vertex, vertex2, vertex3)
+                    else:
+                        for AList in self.stack:
+                            if AList.contains(u):
+                                print("Vertex where u is found ", [n.index for n in AList.vertexList])
+                                self.encodeVertexInFile("merge", vertex=u, index=u.index, offset=str(AL.getOffset(u)))
+                                AL.merge(AList, u)
+                                # AL = AList
+                                self.stack.remove(AList)
+                                break
+
+                    # for vertex in self.vertices:
+                    #     if vertex.isFull():
+                    #         valenceVertex = int(vertex.valence)
+                    #         for k in range(0, valenceVertex):
+                    #             vertex2 = self.vertices[vertex.neighbors[k - 1]]
+                    #             vertex3 = self.vertices[vertex.neighbors[k]]
+                    #             if not vertex2.getEdge(vertex2, vertex3).isEncoded() and not vertex2.isFull() and not vertex3.isFull():
+                    #                 self.encodeFace(vertex, vertex2, vertex3)
 
                 AL.removeFullVertices()
 
-                for AL2 in self.stack:
-                    AL2.removeFullVertices()
-
-                if AL.vertexList and AL.focusVertex.isFull():
-                    AL.nextFocus()
-                    AL.sortFocusVertexNeighbors( self.vertices )
+                # for AL2 in self.stack:
+                #     AL2.removeFullVertices()
+                if AL.vertexList:
+                    if AL.focusVertex.isFull():
+                        self.encodeFace( AL.focusVertex, AL.vertexList[0], AL.vertexList[ len(AL.vertexList) -1 ])
+                        AL.nextFocus()
+                        print( "Next focus vertex" , AL.focusVertex.index )
+                        AL.sortFocusVertexNeighbors( self.vertices )
+                else:
+                    break
 
         print(traversalOrder)
         line = ""
@@ -125,11 +130,11 @@ class Compression:
 
     def encodeFace(self, v1, v2, v3):
         face = self.getFaces(v1, v2, v3)
-        if face is not None and v1 != v2 and v2 != v3 and v1 != v3:
-            for edge in face.edges:
-                if not edge.isEncoded():
-                    print("encode", edge.vertices)
-                    edge.encode()
+        # if face is not None and v1 != v2 and v2 != v3 and v1 != v3:
+        for edge in face.edges:
+            if not edge.isEncoded():
+                print("encode", edge.vertices)
+                edge.encode()
 
     def encodeVertexInFile(self, instruction, vertex, valence=None, offset=None, index=None):
         file = open(self.filename, "a")

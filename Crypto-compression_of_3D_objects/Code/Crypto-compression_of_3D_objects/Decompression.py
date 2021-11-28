@@ -35,83 +35,56 @@ class Decompression:
         vertex1 = Vertex(0, [], [], None, convertToInt(v1))
         vertex2 = Vertex(1, [], [], None, convertToInt(v2))
         vertex3 = Vertex(2, [], [], None, convertToInt(v3))
-        self.initFirstTriangle(vertex1, vertex2, vertex3)
-        AL = ActiveList([vertex1, vertex2, vertex3])
         self.vertices.extend([vertex1, vertex2, vertex3])
+
+        self.initFirstTriangle(vertex1, vertex2, vertex3)
+
+        AL = ActiveList([vertex1, vertex2, vertex3])
         self.stack.append(AL)
         i = 3
         while self.stack:
             AL = self.stack.pop(len(self.stack) - 1)
-            command = ""
-            while AL.vertexList and "order" not in command:
+            AL.focusVertex = vertex1
+            command = file.readline()
 
-                print(command)
-                AL.focusVertex = AL.nextfreeEdgeDecode()
+            while AL.vertexList or "order" not in command:
 
-                print("FOCUS VERTEX = ", AL.focusVertex.index)
-                if "add" in command:
-                    print("AJOUT DE " + str(i))
-                    newVertex = Vertex(i, position = [], neighbors = [], edges = [], valence = convertToInt(command))
-                    AL.makeConnectivity(newVertex)
-                    self.vertices.append(newVertex)
-                    print("FOCUS: Voisin= ", [n.index for n in AL.focusVertex.neighbors])
-                    print("FOCUS: Edge  = ", [n.vertices for n in AL.focusVertex.edges])
-                    print("newVertex: Voisin= ", [n.index for n in newVertex.neighbors])
-                    print("newVertex: Edge= ", [n.vertices for n in newVertex.edges])
-                    print('\n')
-                    i += 1
+                print("command ", i, " ", command)
+                if not AL.focusVertex.isValenceFull():
+                    print("FOCUS VERTEX = ", AL.focusVertex.index)
+                    if "add" in command:
+                        print("AJOUT DE " + str(i))
+                        print("ACTIVE LIST",  [ n.index for n in AL.vertexList ] )
 
-                for vertex in self.vertices:
-                    if vertex.isValenceFull():
-                        valenceFocusVertex = int(vertex.valence)
-                        for k in range(1, valenceFocusVertex):
-                            vertex2 = vertex.neighbors[k - 1]
-                            vertex3 = vertex.neighbors[k]
-                            if not vertex2.containEdge(vertex2, vertex.neighbors[k]) \
-                                    and not vertex2.isValenceFull() \
-                                    and not vertex3.isValenceFull() \
-                                    and  AL.twoVertexNotConnected(vertex,vertex3) \
-                                    and  AL.twoVertexNotConnected(vertex,vertex2):
-                                print("je suis la ")
-                                print(vertex.index)
-                                print(vertex2.index)
-                                print(vertex3.index)
-                                vertex2.addNeighbors([vertex3])
-                                vertex2.addEdge([vertex3])
+                        newVertex = Vertex(i, position = [], neighbors = [], edges = [], valence = convertToInt(command))
+                        AL.makeConnectivity( newVertex)
+                        self.vertices.append(newVertex)
+                        print("FOCUS: Voisin= ", [n.index for n in AL.focusVertex.neighbors])
+                        print("FOCUS: Edge  = ", [n.vertices for n in AL.focusVertex.edges])
+                        print("newVertex: Voisin= ", [n.index for n in newVertex.neighbors])
+                        print("newVertex: Edge= ", [n.vertices for n in newVertex.edges], "\n")
+                        i += 1
+                    command = file.readline()
 
-                                # if k==valenceFocusVertex and not vertex.neighbors[k].isValenceFull() and not vertex.neighbors[0].isValenceFull():
-                                #     if not vertex.neighbors[k].containEdge(vertex.neighbors[k],  vertex.neighbors[0]):
-                                #         print("Je rentre dans la boucle")
-                                #         vertex.neighbors[k].addNeighbors([vertex.neighbors[0]])
-                                #         vertex.neighbors[k].addEdge([vertex.neighbors[0]])
                 AL.removeFullVerticesValence()
-                command = file.readline()
-            # command = file.readline()
-            for k in range(len(self.vertices)):
-                print("index = " + str(self.vertices[k].index))
-                print("Voisin= ", [n.index for n in self.vertices[k].neighbors])
-                print("Edge= ", [n.vertices for n in self.vertices[k].edges])
-                print("position= ", [n for n in self.vertices[k].position])
-                print("\n")
+                print([ o.index for o in AL.vertexList])
+                if AL.vertexList:
+                    if AL.focusVertex.isValenceFull():
+                        AL.focusVertex = AL.vertexList[0]
+                        AL.makeConnectivity( AL.vertexList[ len(AL.vertexList) - 1 ], append=False )
+                        print("Last edge ", [AL.focusVertex.index, AL.vertexList[len(AL.vertexList) - 1].index])
+                else:
+                    break
 
-            print(command)
-            if ("order" in command):
+            if "order" in command:
                 self.associateCorrectIndex(command)
 
             self.decodeGeometry(file)
 
-            for k in range(len(self.vertices)):
-                print("index = " + str(self.vertices[k].index))
-                print("Voisin= ", [n.index for n in self.vertices[k].neighbors])
-                print("Edge= ", [n.vertices for n in self.vertices[k].edges])
-                print("position= ", [n for n in self.vertices[k].position])
-                print("\n")
-
-
             self.orderVerticeList()
             self.makeTriangle()
-            for triangle in self.triangles:
-                print("position= ", [n.index for n in triangle.vertices])
+            # for triangle in self.triangles:
+            #     print("position= ", [n.index for n in triangle.vertices])
             self.writeDecompressFile("decompresseMesh.obj")
 
     def makeTriangle(self):
@@ -131,8 +104,6 @@ class Decompression:
     def decodeGeometry(self, file):
 
         command = file.readline()
-        print("ici")
-
         index = 0
 
         while ("v" in command):
@@ -163,9 +134,9 @@ class Decompression:
         traverselOrder = convertToListInt(command)
 
         for i in range(len(traverselOrder)):
-            print(self.vertices[i].index)
-            print(traverselOrder[i])
-            print("\n")
+            # print(self.vertices[i].index)
+            # print(traverselOrder[i])
+            # print("\n")
             self.vertices[i].index = int(traverselOrder[i])
 
     def alreadyContainTriangle(self, triangleList):

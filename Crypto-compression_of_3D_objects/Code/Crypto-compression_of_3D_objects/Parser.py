@@ -32,7 +32,6 @@ def sortNeighbors(mesh):
         argSort = trimesh.points.radial_sort( [ np.asarray( mesh.vertices[n] ) for n in one_ordered[i]], mesh.vertices[i], mesh.vertex_normals[i])
         one_ordered[i] = [ one_ordered[i][j] for j in argSort ]
         one_ordered[i].reverse()
-        print(i, one_ordered[i] )
 
         # if np.dot(mesh.vertex_normals[i], [0., 0., 1.]) > 0.:
         #     print( mesh.vertex_normals[i], np.dot(mesh.vertex_normals[i], [0., 0., 1.])  )
@@ -48,8 +47,8 @@ def readMesh(file):
     meshVertices = np.asarray(mesh.vertices)
     meshTriangles = np.asarray(mesh.faces)
     meshNormals = np.asarray(mesh.vertex_normals)
-    neighbors = sortNeighbors(mesh)
 
+    neighbors = sortNeighbors(mesh)
     vertices = []
     allEdges = {}
     for i in range(0, len(meshVertices)):

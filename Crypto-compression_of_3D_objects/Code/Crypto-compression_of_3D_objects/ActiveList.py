@@ -43,6 +43,9 @@ class ActiveList:
     def nextFocus(self):
         self.focusVertex = self.vertexList[0]
 
+    def nextFocusDecompression( self ):
+        pass
+
     def merge(self, AL1, vertex):
         for i in range(len(AL1.vertexList)):
             if AL1.vertexList[i] == vertex:
@@ -54,6 +57,7 @@ class ActiveList:
         print("Vertex in AL Merge =", [n.index for n in AL1.vertexList])
 
     def removeFullVertices(self):
+        print("\n")
         deleteVertices = []
         for vertex in self.vertexList:
             if vertex.isFull():
@@ -113,26 +117,21 @@ class ActiveList:
                 return self.focusVertex.neighbors[i - 1]
 
     def nextfreeEdgeDecode(self):
-        for vertex in self.vertexList:
-            # print(vertex.index)
-            # print(vertex.valence)
-            # print("Edge= ", [n.index for n in vertex.neighbors])
-            if int(vertex.valence) >= len(vertex.neighbors):
-                return vertex
-        print("No free Edge")
+        return self.focusVertex.isValenceFull()
 
-    def makeConnectivity(self, newVertex):
+    def makeConnectivity(self, newVertex, append = True):
         newVertex.addNeighbors([self.focusVertex, self.vertexList[len(self.vertexList) - 1]])
         newVertex.addEdge([self.focusVertex, self.vertexList[len(self.vertexList) - 1]])
-        # self.vertexList[len(self.vertexList) - 1].addNeighbors([newVertex])
-        # self.vertexList[len(self.vertexList) - 1].addEdge([newVertex])
 
         self.focusVertex.addNeighbors([newVertex])
         self.focusVertex.addEdge([newVertex])
+        if append:
+            print("edge ", [self.focusVertex.index, self.vertexList[len(self.vertexList) - 1].index])
 
-        self.joinNeigborsLink(newVertex)
+            self.vertexList.append(newVertex)
+        print( self.focusVertex.index, len( self.focusVertex.edges ))
+        # self.joinNeigborsLink(newVertex)
 
-        self.vertexList.append(newVertex)
 
     def twoVertexNotConnected(self, vertex, vertexText):
         listVertexFree = []

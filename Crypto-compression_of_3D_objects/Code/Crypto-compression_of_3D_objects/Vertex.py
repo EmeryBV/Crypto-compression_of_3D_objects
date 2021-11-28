@@ -36,9 +36,8 @@ class Vertex:
         return True
 
     def isValenceFull(self):
-        if int(self.valence) == len(self.neighbors):
-            return True
-        return False
+        return len(self.edges)  >=  int(self.valence)
+
 
     def containEdge(self, v1, v2):
         for edge in self.edges:
