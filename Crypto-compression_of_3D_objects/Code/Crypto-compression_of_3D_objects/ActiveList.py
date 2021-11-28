@@ -74,17 +74,22 @@ class ActiveList:
         for vertexDel in deleteVertices:
             self.vertexList.remove(vertexDel)
 
+    def sortFocusVertexNeighbors(self, allVertices ):
+        predecessor = self.vertexList[ len(self.vertexList) -1 ]
+        for i in range( len( self.focusVertex.neighbors ) ):
+            neighbor = allVertices[ self.focusVertex.neighbors[i] ]
+            if not neighbor.isEncoded() and neighbor.getEdge( neighbor, self.focusVertex ) and neighbor.getEdge( neighbor, predecessor ):
+                self.focusVertex.neighbors = self.focusVertex.neighbors[i:] + self.focusVertex.neighbors[0:i]
+                self.focusVertex.edges = self.focusVertex.edges[i:] + self.focusVertex.edges[0:i]
+                break
+
     def nextFreeEdge(self):
         print("EDGE de focus = ", [n.vertices for n in self.focusVertex.edges])
-        for i in range(len(self.focusVertex.edges)):
-            if i == 0:
-                edgePred = self.focusVertex.edges[len(self.focusVertex.edges)-1]
-            else:
-                edgePred = self.focusVertex.edges[i-1]
-            if not self.focusVertex.edges[i].isEncoded() and edgePred.isEncoded():
-                self.focusVertex.edges[i].encode()
-                print("encode", self.focusVertex.edges[i].vertices)
-                return self.focusVertex.edges[i]
+        for edge in self.focusVertex.edges:
+            if not edge.isEncoded():
+                edge.encode()
+                print("encode", edge.vertices)
+                return edge
 
         print("nextFreeEdge return None")
         return None
@@ -112,7 +117,7 @@ class ActiveList:
             # print(vertex.index)
             # print(vertex.valence)
             # print("Edge= ", [n.index for n in vertex.neighbors])
-            if int(vertex.valence) >= len(vertex.neighbors) + 1:
+            if int(vertex.valence) >= len(vertex.neighbors):
                 return vertex
         print("No free Edge")
 
@@ -125,11 +130,7 @@ class ActiveList:
         self.focusVertex.addNeighbors([newVertex])
         self.focusVertex.addEdge([newVertex])
 
-        if self.focusVertex.isValenceFull() and int(self.focusVertex.valence) % 2 == 1 and not \
-        self.focusVertex.neighbors[0].isValenceFull():
-            self.joinFirstAndLastNeigbor(newVertex)
-        else:
-            self.joinNeigborsLink(newVertex)
+        self.joinNeigborsLink(newVertex)
 
         self.vertexList.append(newVertex)
 

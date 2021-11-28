@@ -28,8 +28,16 @@ def sortNeighbors(mesh):
     one_ordered = [nx.cycle_basis(g.subgraph(i))[0] for i in one_ring]
 
     for i in range(0, len(mesh.vertices)):
-        if np.dot(mesh.vertex_normals[i], [0., 0., 1.]) > 0.:
-            one_ordered[i].reverse()
+
+        argSort = trimesh.points.radial_sort( [ np.asarray( mesh.vertices[n] ) for n in one_ordered[i]], mesh.vertices[i], mesh.vertex_normals[i])
+        one_ordered[i] = [ one_ordered[i][j] for j in argSort ]
+        one_ordered[i].reverse()
+        print(i, one_ordered[i] )
+
+        # if np.dot(mesh.vertex_normals[i], [0., 0., 1.]) > 0.:
+        #     print( mesh.vertex_normals[i], np.dot(mesh.vertex_normals[i], [0., 0., 1.])  )
+        #     one_ordered[i].reverse()
+        #     print( i, one_ordered[i] )
 
     return one_ordered
 
@@ -92,7 +100,6 @@ def writeMesh(listVertice, faces, filename):
     for vertex in listVertice:
         listPosition.append(vertex.position)
         listNormal.append(vertex.normal)
-        print(vertex.normal)
 
     for triangle in faces:
         listListIndex = []

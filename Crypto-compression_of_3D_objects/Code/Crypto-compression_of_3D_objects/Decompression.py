@@ -40,46 +40,44 @@ class Decompression:
         self.vertices.extend([vertex1, vertex2, vertex3])
         self.stack.append(AL)
         i = 3
-        emptyList = False
-        while self.stack and not emptyList:
+        while self.stack:
             AL = self.stack.pop(len(self.stack) - 1)
             command = ""
-            while AL.vertexList and not "order" in command:
-
+            while AL.vertexList and "order" not in command:
 
                 print(command)
                 AL.focusVertex = AL.nextfreeEdgeDecode()
-                print("FOCUS VERTEX = ", AL.focusVertex.index)
-                if not emptyList:
-                    if "add" in command:
-                        print("AJOUT DE " + str(i))
-                        newVertex = Vertex(i, [], [], [], convertToInt(command))
-                        AL.makeConnectivity(newVertex)
-                        self.vertices.append(newVertex)
-                        print("FOCUS: Voisin= ", [n.index for n in AL.focusVertex.neighbors])
-                        print("FOCUS:Edge= ", [n.vertices for n in AL.focusVertex.edges])
-                        print("newVertex: Voisin= ", [n.index for n in newVertex.neighbors])
-                        print("newVertex:Edge= ", [n.vertices for n in newVertex.edges])
-                        print('\n')
-                        i += 1
 
-                    for vertex in self.vertices:
-                        if vertex.isValenceFull():
-                            valenceFocusVertex = int(vertex.valence)
-                            for k in range(1, valenceFocusVertex):
-                                vertex2 = vertex.neighbors[k - 1]
-                                vertex3 = vertex.neighbors[k]
-                                if not vertex2.containEdge(vertex2, vertex.neighbors[k]) \
-                                        and not vertex2.isValenceFull() \
-                                        and not vertex3.isValenceFull() \
-                                        and  AL.twoVertexNotConnected(vertex,vertex3) \
-                                        and  AL.twoVertexNotConnected(vertex,vertex2):
-                                    print("je suis la ")
-                                    print(vertex.index)
-                                    print(vertex2.index)
-                                    print(vertex3.index)
-                                    vertex2.addNeighbors([vertex3])
-                                    vertex2.addEdge([vertex3])
+                print("FOCUS VERTEX = ", AL.focusVertex.index)
+                if "add" in command:
+                    print("AJOUT DE " + str(i))
+                    newVertex = Vertex(i, position = [], neighbors = [], edges = [], valence = convertToInt(command))
+                    AL.makeConnectivity(newVertex)
+                    self.vertices.append(newVertex)
+                    print("FOCUS: Voisin= ", [n.index for n in AL.focusVertex.neighbors])
+                    print("FOCUS: Edge  = ", [n.vertices for n in AL.focusVertex.edges])
+                    print("newVertex: Voisin= ", [n.index for n in newVertex.neighbors])
+                    print("newVertex: Edge= ", [n.vertices for n in newVertex.edges])
+                    print('\n')
+                    i += 1
+
+                for vertex in self.vertices:
+                    if vertex.isValenceFull():
+                        valenceFocusVertex = int(vertex.valence)
+                        for k in range(1, valenceFocusVertex):
+                            vertex2 = vertex.neighbors[k - 1]
+                            vertex3 = vertex.neighbors[k]
+                            if not vertex2.containEdge(vertex2, vertex.neighbors[k]) \
+                                    and not vertex2.isValenceFull() \
+                                    and not vertex3.isValenceFull() \
+                                    and  AL.twoVertexNotConnected(vertex,vertex3) \
+                                    and  AL.twoVertexNotConnected(vertex,vertex2):
+                                print("je suis la ")
+                                print(vertex.index)
+                                print(vertex2.index)
+                                print(vertex3.index)
+                                vertex2.addNeighbors([vertex3])
+                                vertex2.addEdge([vertex3])
 
                                 # if k==valenceFocusVertex and not vertex.neighbors[k].isValenceFull() and not vertex.neighbors[0].isValenceFull():
                                 #     if not vertex.neighbors[k].containEdge(vertex.neighbors[k],  vertex.neighbors[0]):
@@ -198,7 +196,7 @@ class Decompression:
 
 
 def convertToInt(instruction):
-    return re.findall(r"[-+]?\d*\.\d+|\d+", instruction)[0]
+    return int( re.findall(r"[-+]?\d*\.\d+|\d+", instruction)[0] )
 
 
 def convertToListInt(instruction):

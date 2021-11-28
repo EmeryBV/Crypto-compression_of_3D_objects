@@ -14,7 +14,7 @@ if __name__ == '__main__':
     filename = "compressedMesh.txt"
     file = create_compress_file(filename)
     # file.write("test.obj")
-    meshFile = "./Mesh/OBJ/simpleSphere.obj"
+    meshFile = "./Mesh/OBJ/sphere.obj"
     # meshFile = "./Mesh/OBJ/simpleSphere.obj"
     vertices, faces = readMesh(meshFile)
     # decompression = Decompression()

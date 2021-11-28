@@ -38,6 +38,7 @@ class Compression:
         AL = ActiveList(startVertices.copy())
 
         AL.focusVertex = startVertices[0]
+        AL.sortFocusVertexNeighbors( self.vertices )
         # vertexFocus = startVertices[random.randint(0, 2)]
         # vertexFocus.setFocus(True)
 
@@ -55,7 +56,6 @@ class Compression:
                 e = AL.nextFreeEdge()
                 u = self.vertices[AL.vertexAlongEdge(e)]
 
-                # print("Valence u=", u.valence)
                 if not u.isEncoded():
                     print("Ajout du vertice " + str(u.index))
                     for v3 in AL.vertexList:
@@ -72,7 +72,7 @@ class Compression:
                     print("AL : ", [k.index for k in AL.vertexList], "ALBis : ", [k.index for k in ALBis.vertexList])
                     self.stack.append(ALBis)
                     self.encodeVertexInFile("split", vertex=u, offset=str(AL.getOffset(u)))
-                    # print("Vertex in ALBIS =", [n.index for n in ALBis.vertexList])
+
                 else:
                     for AList in self.stack:
                         if AList.contains(u):
@@ -92,12 +92,16 @@ class Compression:
                             vertex3 = self.vertices[vertex.neighbors[k]]
                             if not vertex2.getEdge(vertex2, vertex3).isEncoded() and not vertex2.isFull() and not vertex3.isFull():
                                 self.encodeFace(vertex, vertex2, vertex3)
+
                 AL.removeFullVertices()
+
                 for AL2 in self.stack:
                     AL2.removeFullVertices()
-                # print(AL.vertexList)
+
                 if AL.vertexList and AL.focusVertex.isFull():
                     AL.nextFocus()
+                    AL.sortFocusVertexNeighbors( self.vertices )
+
         print(traversalOrder)
         line = ""
         for index in traversalOrder:
@@ -105,6 +109,7 @@ class Compression:
         file = open(self.filename, "a")
         file.write("order " + line + "\n")
         file.close()
+
 
     def writeNormal(self,listQuantifiedNormals):
         file = open(self.filename, "a")
@@ -269,7 +274,7 @@ class Compression:
 
         minNormals, maxNormals = self.getBoundingBoxNormal()
         normalizePointNormals = self.remapingNormals(minNormals, maxNormals)
-        quantifiedNormals = self.quantifyNormals(normalizePointNormals, precision*10)
+        quantifiedNormals = self.quantifyNormals(normalizePointNormals, precision)
         return quantifiedVertices, quantifiedNormals
         # verticeDequantifie = self.dequantificationVertices(quantifiedVertices, precision)
         # reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
