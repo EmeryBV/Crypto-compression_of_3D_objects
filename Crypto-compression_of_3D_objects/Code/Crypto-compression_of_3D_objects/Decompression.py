@@ -9,6 +9,8 @@ import re
 import numpy as np
 import decimal as dc
 
+listPrediction = []
+
 
 class Decompression:
 
@@ -48,16 +50,18 @@ class Decompression:
             command = file.readline()
 
             while AL.vertexList or "order" not in command:
-
                 print("command ", i, " ", command)
                 if not AL.focusVertex.isValenceFull():
                     print("FOCUS VERTEX = ", AL.focusVertex.index)
                     if "add" in command:
                         print("AJOUT DE " + str(i))
-                        print("ACTIVE LIST",  [ n.index for n in AL.vertexList ] )
 
-                        newVertex = Vertex(i, position = [], neighbors = [], edges = [], valence = convertToInt(command))
-                        AL.makeConnectivity( newVertex)
+                        print("ACTIVE LIST", [n.index for n in AL.vertexList])
+                        newVertex = Vertex(i, position=[], neighbors=[], edges=[], valence=convertToInt(command))
+                        listPrediction.append([AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1],
+                                               AL.vertexList[len(AL.vertexList) - 2]])
+
+                        AL.makeConnectivity(newVertex)
                         self.vertices.append(newVertex)
                         print("FOCUS: Voisin= ", [n.index for n in AL.focusVertex.neighbors])
                         print("FOCUS: Edge  = ", [n.vertices for n in AL.focusVertex.edges])
@@ -67,11 +71,11 @@ class Decompression:
                     command = file.readline()
 
                 AL.removeFullVerticesValence()
-                print([ o.index for o in AL.vertexList])
+                print([o.index for o in AL.vertexList])
                 if AL.vertexList:
                     if AL.focusVertex.isValenceFull():
                         AL.focusVertex = AL.vertexList[0]
-                        AL.makeConnectivity( AL.vertexList[ len(AL.vertexList) - 1 ], append=False )
+                        AL.makeConnectivity(AL.vertexList[len(AL.vertexList) - 1], append=False)
                         print("Last edge ", [AL.focusVertex.index, AL.vertexList[len(AL.vertexList) - 1].index])
                 else:
                     break
@@ -80,8 +84,8 @@ class Decompression:
                 self.associateCorrectIndex(command)
 
             self.decodeGeometry(file)
-
             self.orderVerticeList()
+
             self.makeTriangle()
             # for triangle in self.triangles:
             #     print("position= ", [n.index for n in triangle.vertices])
@@ -102,20 +106,73 @@ class Decompression:
                             self.triangles.append(Face(triangle))
 
     def decodeGeometry(self, file):
+        command = file.readline()
+        BBvMin = convertToListInt(command)
+        print("BBvmin" + str(BBvMin))
 
         command = file.readline()
-        index = 0
+        BBvMax = convertToListInt(command)
+        print("BBvMax" + str(BBvMax))
 
-        while ("v" in command):
-            self.associateCorrectCoord(command, index)
-            command = file.readline()
-            index += 1
+        command = file.readline()
+        BBnMin = convertToListInt(command)
+        print("BBnmin" + str(BBnMin))
 
-        index = 0
-        while ("n" in command):
-            self.associateCorrectNormal(command, index)
-            command = file.readline()
-            index += 1
+        command = file.readline()
+        BBnMax = convertToListInt(command)
+        print("BBnMax" + str(BBnMax))
+
+        command = file.readline()
+        quantification = convertToInt(command)
+        print("quantification " + str(quantification))
+
+        self.associateCorrectCoord(file, quantification, BBvMin, BBvMax)
+        self.associateCorrectNormal(file, quantification, BBvMin, BBvMax)
+
+    def getBoundingBoxVertices(self):
+        minVertice = [10000, 10000, 10000]
+        maxVertice = [0, 0, 0]
+        for vertex in self.vertices:
+            for i in range(3):
+                if int(vertex.position[i]) < int(minVertice[i]):
+                    minVertice[i] = int(vertex.position[i])
+                if int(vertex.position[i]) > int(maxVertice[i]):
+                    maxVertice[i] = int(vertex.position[i])
+        return minVertice, maxVertice
+
+    def dequantificationVertices(self, coefficient):
+        for vertex in self.vertices:
+            verticesDequantifiePosition = []
+            for i in range(3):
+                verticesDequantifiePosition.append(float(vertex.position[i]) / float(coefficient))
+            vertex.position = verticesDequantifiePosition
+
+    def dequantificationNormals(self, coefficient):
+        for vertex in self.vertices:
+            verticesDequantifieNormals = []
+            for i in range(3):
+                verticesDequantifieNormals.append(float(vertex.normal[i]) / float(coefficient))
+            vertex.normal = verticesDequantifieNormals
+
+    def remapingInvVertices(self, minVertex, maxVertex):
+        for vertex in self.vertices:
+            vertexquantizePosition = []
+            for i in range(3):
+                vertexquantizePosition.append(
+                    float(vertex.position[i]) * (abs(float(minVertex[i])) + abs(float(maxVertex[i]))) - abs(
+                        float(minVertex[i])))
+            # print(vertexquantizePosition)
+            vertex.position = vertexquantizePosition
+
+    def remapingInvNormals(self, minNormal, maxNormal):
+        for vertex in self.vertices:
+            vertexquantizeNormal = []
+            for i in range(3):
+                vertexquantizeNormal.append(
+                    float(vertex.normal[i]) * (abs(float(minNormal[i])) + abs(float(maxNormal[i]))) - abs(
+                        float(minNormal[i])))
+            # print(vertexquantizePosition)
+            vertex.normal = vertexquantizeNormal
 
     def orderVerticeList(self):
         change = True
@@ -146,18 +203,29 @@ class Decompression:
                 return True
         return False
 
-    def associateCorrectCoord(self, command, index):
-        coordList = convertToListInt(command)
+    def associateCorrectCoord(self, file, quantification, BBvMin, BBvMax):
         for vertex in self.vertices:
-            if vertex.index == index:
-                vertex.position = coordList
+            command = file.readline()
+            # print(command)
+            position = convertToListInt(command)
+            vertex.position = position
+        j = 0
+        for i in range(3, len(self.vertices)):
+            self.vertices[i].position = findVertexWithprediction(listPrediction[j], self.vertices[i].position)
+            j += 1
+        self.dequantificationVertices(quantification)
+        self.remapingInvVertices(BBvMin, BBvMax)
 
-    def associateCorrectNormal(self, command, index):
-        coordList = convertToListInt(command)
+    def associateCorrectNormal(self, file, quantification, BBnMin, BBnMax):
         for vertex in self.vertices:
-            # print(index)
-            if vertex.index == index:
-                vertex.normal = coordList
+            command = file.readline()
+            # print(command)
+            normal = convertToListInt(command)
+            vertex.normal = normal
+
+        self.dequantificationNormals(quantification)
+        self.remapingInvNormals(BBnMin, BBnMax)
+
 
     def writeDecompressFile(self, filename):
         Parser.writeMesh(self.vertices, self.triangles, filename)
@@ -167,8 +235,21 @@ class Decompression:
 
 
 def convertToInt(instruction):
-    return int( re.findall(r"[-+]?\d*\.\d+|\d+", instruction)[0] )
+    return int(re.findall(r"[-+]?\d*\.\d+|\d+", instruction)[0])
 
 
 def convertToListInt(instruction):
     return re.findall(r"[-+]?\d*\.*\d+", instruction)
+
+
+def findVertexWithprediction(listPrediction, prediction):
+    focus = listPrediction[0]
+    beforeLast = listPrediction[2]
+    last = listPrediction[1]
+
+    rPosition = []
+
+    for i in range(0, 3):
+        rPosition.append(
+            (int(focus.position[i]) + int(last.position[i]) - int(beforeLast.position[i]) + int(prediction[i])))
+    return rPosition

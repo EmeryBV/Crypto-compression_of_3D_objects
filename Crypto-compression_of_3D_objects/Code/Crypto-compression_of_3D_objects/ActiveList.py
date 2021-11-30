@@ -25,6 +25,20 @@ class ActiveList:
         if len(self.vertexList) < len(ALBis.vertexList):
             self.vertexList = ALBis.vertexList
             ALBis.vertexList = temp
+        return ALBis
+
+    def splitDecompression(self, vertex , offset):
+        ALBis = None
+        for i in range(0, offset):
+            if vertex == self.vertexList[i]:
+                ALBis = ActiveList(self.vertexList[0:i + 1])
+                self.vertexList = self.vertexList[i:]
+                break
+
+        temp = self.vertexList
+        if len(self.vertexList) < len(ALBis.vertexList):
+            self.vertexList = ALBis.vertexList
+            ALBis.vertexList = temp
 
         return ALBis
 

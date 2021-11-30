@@ -110,6 +110,6 @@ def writeMesh(listVertice, faces, filename):
 
     trimesh.repair.fix_winding(mesh)
 
-    meshText = trimesh.exchange.obj.export_obj(mesh,include_normals = True,digits=0)
+    meshText = trimesh.exchange.obj.export_obj(mesh,include_normals = True,digits=10)
     file = open(filename, "w")
     file.write(meshText)

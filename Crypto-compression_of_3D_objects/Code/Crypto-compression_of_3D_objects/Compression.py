@@ -9,9 +9,8 @@ import binary_operation
 import numpy as np
 import decimal as dc
 
-
+listPrediction = []
 class Compression:
-
     def __init__(self, vertices, faces, filename):
         self.stack = []
         self.vertices = vertices
@@ -19,7 +18,7 @@ class Compression:
         self.filename = filename
 
     def getStartTriangle(self):
-        return self.triangles[random.randint(0, len(self.triangles) - 1)]
+        return self.triangles[0]
 
     def encodeConnectivity(self):
         traversalOrder = []
@@ -44,7 +43,6 @@ class Compression:
 
             AL = self.stack.pop(len(self.stack) - 1)
             AL.nextFocus()
-            print(AL.focusVertex)
 
             AL.sortFocusVertexNeighbors(self.vertices)
 
@@ -61,7 +59,9 @@ class Compression:
 
                     if not u.isEncoded():
                         print("Ajout du vertice " + str(u.index))
-                        self.encodeFace(u, AL.focusVertex, AL.vertexList[ len(AL.vertexList) -1 ])
+                        listPrediction.append([AL.focusVertex,AL.vertexList[len(AL.vertexList) - 1],AL.vertexList[len(AL.vertexList) - 2], u])
+
+                        self.encodeFace(u, AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1])
                         self.encodeVertexInFile("add", vertex=u, valence=str(u.valence))
 
                         AL.addVertex(u)
@@ -100,10 +100,10 @@ class Compression:
                 #     AL2.removeFullVertices()
                 if AL.vertexList:
                     if AL.focusVertex.isFull():
-                        self.encodeFace( AL.focusVertex, AL.vertexList[0], AL.vertexList[ len(AL.vertexList) -1 ])
+                        self.encodeFace(AL.focusVertex, AL.vertexList[0], AL.vertexList[len(AL.vertexList) - 1])
                         AL.nextFocus()
-                        print( "Next focus vertex" , AL.focusVertex.index )
-                        AL.sortFocusVertexNeighbors( self.vertices )
+                        print("Next focus vertex", AL.focusVertex.index)
+                        AL.sortFocusVertexNeighbors(self.vertices)
                 else:
                     break
 
@@ -115,14 +115,12 @@ class Compression:
         file.write("order " + line + "\n")
         file.close()
 
-
-    def writeNormal(self,listQuantifiedNormals):
+    def writeNormal(self, listQuantifiedNormals):
         file = open(self.filename, "a")
 
         for vertex in listQuantifiedNormals:
             line = ""
             for i in range(0, 3):
-
                 line += "".join(str(vertex.normal[i])) + " "
             file.write("n " + line + "\n")
 
@@ -210,26 +208,10 @@ class Compression:
             for i in range(0, 3):
                 normalizeNormals.append((vertex.normal[i] + abs(minNormals[i])) / sumExtremum[i])
             newVertex = 0
-            newVertex = Vertex(vertex.index, vertex.position, vertex.neighbors, [],normal = normalizeNormals.copy())
+            newVertex = Vertex(vertex.index, vertex.position, vertex.neighbors, [], normal=normalizeNormals.copy())
             pointNormalize[l] = newVertex
             l += 1
         return pointNormalize
-
-    def remapingInv(self, pointNormalize, minVertice, maxVertice):
-        vertexRemap = []
-        l = 0
-        for vertex in pointNormalize:
-            vertexquantizePosition = []
-            for i in range(3):
-                vertexquantizePosition.append(
-                    vertex.position[i] * (abs(minVertice[i]) + abs(maxVertice[i])) - abs(minVertice[i]))
-            # print(normalizeVertex)
-            vertexRemap.append(Vertex(vertex.index, vertexquantizePosition, vertex.neighbors))
-
-            # print(vertexquantize[l].position)
-            # print("\n")
-            l += 1
-        return vertexRemap
 
     def quantifyVertices(self, pointNormalize, coefficient):
         quantifiedVertices = len(pointNormalize) * [None]
@@ -240,91 +222,99 @@ class Compression:
                 verticesQuantifiePosition.append(round(vertex.position[i] * coefficient))
 
             vertexQuantifie = Vertex(vertex.index, verticesQuantifiePosition.copy(), vertex.neighbors)
-
+            self.vertices[vertex.index].position = verticesQuantifiePosition.copy()
             quantifiedVertices[l] = vertexQuantifie
             l += 1
         return quantifiedVertices
 
     def quantifyNormals(self, pointNormalizeNormals, coefficient):
-        quantifiedNormals= len(pointNormalizeNormals) * [None]
+        quantifiedNormals = len(pointNormalizeNormals) * [None]
         l = 0
         for vertex in pointNormalizeNormals:
             verticesQuantifieNormals = []
             for i in range(3):
-                print(vertex.normal)
+                # print(vertex.normal)
                 verticesQuantifieNormals.append(round(vertex.normal[i] * coefficient))
-            normalsQuantifie = Vertex(vertex.index, vertex.position, vertex.neighbors,normal = verticesQuantifieNormals.copy())
+            normalsQuantifie = Vertex(vertex.index, vertex.position, vertex.neighbors,
+                                      normal=verticesQuantifieNormals.copy())
             quantifiedNormals[l] = normalsQuantifie
             l += 1
         return quantifiedNormals
 
-    def dequantificationVertices(self, quantifiedVertices, coefficient):
-        verticeDequantifie = len(quantifiedVertices) * [None]
-        l = 0
-        for vertex in quantifiedVertices:
-            verticesDequantifiePosition = []
-            for i in range(3):
-                verticesDequantifiePosition.append(round(vertex.position[i] / coefficient))
-            # print(verticesQuantifiePosition)
-            vertexdeQuantifie = Vertex(vertex.index, verticesDequantifiePosition.copy(), vertex.neighbors)
-            verticeDequantifie[l] = vertexdeQuantifie
-            # print(quantifiedVertices[l].position)
-            l += 1
-        return verticeDequantifie
-
-    def quantification(self, precision):
+    def quantification(self,precision):
         minVertices, maxVertices = self.getBoundingBoxVertices()
+        file = open(self.filename, "a")
+        file.write("BBvMin" + str(minVertices) + "\n")
+        file.write("BBvMax" + str(maxVertices) + "\n")
+
         normalizePointVertices = self.remapingVertices(minVertices, maxVertices)
         quantifiedVertices = self.quantifyVertices(normalizePointVertices, precision)
 
+
         minNormals, maxNormals = self.getBoundingBoxNormal()
+        file.write("BBnMin" + str(minNormals) + "\n")
+        file.write("BBnMax" + str(maxNormals) + "\n")
         normalizePointNormals = self.remapingNormals(minNormals, maxNormals)
         quantifiedNormals = self.quantifyNormals(normalizePointNormals, precision)
+        file.close()
         return quantifiedVertices, quantifiedNormals
         # verticeDequantifie = self.dequantificationVertices(quantifiedVertices, precision)
         # reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
         # Parser.writeMesh(quantifiedVertices, self.triangles, filenameMeshQuantify)
 
-    def encodeGeometry(self):
+    def encodeGeometry(self,quantification):
         file = open(self.filename, "a")
 
-        quantifiedVertices, quantifiedNormals = self.quantification(1024)
+        quantifiedVertices, quantifiedNormals = self.quantification(quantification)
+        file.write("q "+ str(quantification) + "\n")
 
-        for vertex in quantifiedVertices:
+        listPredictionPosition = []
+        for listVertex in listPrediction:
+            list = []
+            for i in range(0,3):
+                list.append(listVertex[3].position[i] - prediction(listVertex[0].position,listVertex[1].position,listVertex[2].position)[i])
+            listPredictionPosition.append(list)
+
+        for i in range(3):
+            file.write("v ")
+            for j in range(3):
+                file.write(str(int(self.vertices[i].position[j])) + " ")
+            file.write("\n")
+
+        for predictionPosition in listPredictionPosition:
             file.write("v ")
             for i in range(3):
-                file.write(str(int(vertex.position[i])) + " ")
+                file.write(str(int(predictionPosition[i])) + " ")
             file.write("\n")
         file.close()
+
         self.writeNormal(quantifiedNormals)
 
-        # compressWithHuffman(filenameMeshQuantify, filenameCompressHuffman)
-        # vertex = AL[len(AL) - 1]
-        # predictVertex = prediction(AL[0].position, AL[len(AL) - 2].position, AL[len(AL) - 3].position)
-        # print(vertex.position)
-        # print(predictVertex)
-        # result = vertex.position - predictVertex
-        # print(result)
-        # print("\n")
+        # compressWithHuffman(self.filename, "test")
+        test = open(self.filename, 'r')
+        message = test.read()
 
 
-def compressWithHuffman(filenameMeshQuantify, filenameCompressHuffman):
-    fileQuantifie = open(filenameMeshQuantify, 'r')
-    text = fileQuantifie.read()
-    textCompresser, dico = huffman.compresser(text)
-    print("Avant : {} bits / Après : {} bits".format(len(text) * 8, len(textCompresser)))
-    fileCompress = open(filenameCompressHuffman, "w")
-    fileCompress.write(textCompresser)
-    fileCompress.close()
-    fileUncompress = open(filenameCompressHuffman, "r")
 
-
-def uncompressWithHuffman(filenameCompressHuffman):
-    fileUncompress = open(filenameCompressHuffman, "r")
-    filenameUncompressHuffman = fileUncompress.read()
+# def compressWithHuffman(filenameMeshQuantify, filenameCompressHuffman):
+#     fileQuantifie = open(filenameMeshQuantify, 'r')
+#     text = fileQuantifie.read()
+#     textCompresser, dico = huffman.compresser(text)
+#     print("Avant : {} bits / Après : {} bits".format(len(text), len(textCompresser)))
+#     fileCompress = open(filenameCompressHuffman, "w")
+#     fileCompress.write(textCompresser)
+#     fileCompress.close()
+#     fileUncompress = open(filenameCompressHuffman, "r")
+#
+#
+# def uncompressWithHuffman(filenameCompressHuffman):
+#     fileUncompress = open(filenameCompressHuffman, "r")
+#     filenameUncompressHuffman = fileUncompress.read()
 
 
 # r = v + u - w
 def prediction(vPosition, uPosition, wPosition):
-    rPosition = vPosition + uPosition - wPosition
+    rPosition = []
+    for i in range(0,3):
+        rPosition.append(vPosition[i] + uPosition[i] - wPosition[i])
     return rPosition
