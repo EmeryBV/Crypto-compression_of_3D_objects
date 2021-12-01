@@ -6,8 +6,6 @@ import sys
 import os
 
 # Little hack to have binary stdin/stdout
-sys.stdin = os.fdopen(sys.stdin.fileno(), 'rb')
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'wb')
 
 CHUNK_SIZE = 1024
 EOF = -1
@@ -272,12 +270,4 @@ class Engine():
 
                     for predictor in self.predictors:
                         predictor.feed(decompressed)
-
                     break
-
-if __name__ == '__main__':
-    engine = Engine()
-    if sys.argv[1] == 'compress':
-        engine.compress(sys.stdin, sys.stdout)
-    elif sys.argv[1] == 'decompress':
-        engine.decompress(sys.stdin, sys.stdout)

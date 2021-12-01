@@ -1,13 +1,6 @@
-import random
-
-import Parser
-from Edge import Edge
-from Vertex import Vertex
-from ActiveList import ActiveList
-import huffman
-import binary_operation
-import numpy as np
-import decimal as dc
+from MeshData.Vertex import Vertex
+from Compression.ActiveList import ActiveList
+from Compression.markov import Engine
 
 listPrediction = []
 class Compression:
@@ -179,6 +172,36 @@ class Compression:
             if face.composedOf(v1, v2, v3):
                 return face
 
+    def encodeGeometry(self, quantification):
+        file = open(self.filename, "a")
+
+        quantifiedVertices, quantifiedNormals = self.quantification(quantification)
+        file.write("q " + str(quantification) + "\n")
+
+        listPredictionPosition = []
+        for listVertex in listPrediction:
+            list = []
+            for i in range(0, 3):
+                list.append(listVertex[3].position[i] -
+                            prediction(listVertex[0].position, listVertex[1].position, listVertex[2].position)[i])
+            listPredictionPosition.append(list)
+
+        for i in range(3):
+            file.write("v ")
+            for j in range(3):
+                file.write(str(int(self.vertices[i].position[j])) + " ")
+            file.write("\n")
+
+        for predictionPosition in listPredictionPosition:
+            file.write("v ")
+            for i in range(3):
+                file.write(str(int(predictionPosition[i])) + " ")
+            file.write("\n")
+        file.close()
+
+        self.writeNormal(quantifiedNormals)
+
+
     def remapingVertices(self, minVertices, maxVertices):
         pointNormalize = (len(self.vertices)) * [None]
         sumExtremum = []
@@ -262,38 +285,6 @@ class Compression:
         # reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
         # Parser.writeMesh(quantifiedVertices, self.triangles, filenameMeshQuantify)
 
-    def encodeGeometry(self,quantification):
-        file = open(self.filename, "a")
-
-        quantifiedVertices, quantifiedNormals = self.quantification(quantification)
-        file.write("q "+ str(quantification) + "\n")
-
-        listPredictionPosition = []
-        for listVertex in listPrediction:
-            list = []
-            for i in range(0,3):
-                list.append(listVertex[3].position[i] - prediction(listVertex[0].position,listVertex[1].position,listVertex[2].position)[i])
-            listPredictionPosition.append(list)
-
-        for i in range(3):
-            file.write("v ")
-            for j in range(3):
-                file.write(str(int(self.vertices[i].position[j])) + " ")
-            file.write("\n")
-
-        for predictionPosition in listPredictionPosition:
-            file.write("v ")
-            for i in range(3):
-                file.write(str(int(predictionPosition[i])) + " ")
-            file.write("\n")
-        file.close()
-
-        self.writeNormal(quantifiedNormals)
-
-        # compressWithHuffman(self.filename, "test")
-        test = open(self.filename, 'r')
-        message = test.read()
-
 
 
 # def compressWithHuffman(filenameMeshQuantify, filenameCompressHuffman):
@@ -318,3 +309,9 @@ def prediction(vPosition, uPosition, wPosition):
     for i in range(0,3):
         rPosition.append(vPosition[i] + uPosition[i] - wPosition[i])
     return rPosition
+
+def compressionMarkov(sourceFilename, destinationFilename):
+    sourceFile = open(sourceFilename, 'rb')
+    destinationFile = open(destinationFilename, 'wb')
+    engine = Engine()
+    engine.compress(sourceFile, destinationFile)

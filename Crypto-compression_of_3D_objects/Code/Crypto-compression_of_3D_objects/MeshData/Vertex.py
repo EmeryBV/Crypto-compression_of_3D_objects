@@ -1,4 +1,4 @@
-from Edge import Edge
+from MeshData.Edge import Edge
 
 
 class Vertex:

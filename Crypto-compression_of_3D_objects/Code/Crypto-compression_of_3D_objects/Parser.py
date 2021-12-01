@@ -1,11 +1,10 @@
-import math
 import trimesh
 import numpy as np
 import networkx as nx
 
-from Edge import Edge
-from Face import Face
-from Vertex import Vertex
+from MeshData.Edge import Edge
+from MeshData.Face import Face
+from MeshData.Vertex import Vertex
 
 
 def getNeighbors(vertex, faces):

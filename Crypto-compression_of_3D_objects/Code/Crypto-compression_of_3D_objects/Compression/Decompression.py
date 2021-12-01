@@ -1,24 +1,22 @@
-import random
-
 import Parser
-from Edge import Edge
-from Face import Face
-from Vertex import Vertex
-from ActiveList import ActiveList
+from MeshData.Face import Face
+from MeshData.Vertex import Vertex
+from Compression.ActiveList import ActiveList
 import re
-import numpy as np
-import decimal as dc
+from Compression.markov import Engine
 
 listPrediction = []
 
 
 class Decompression:
 
-    def __init__(self, filename):
+    def __init__(self, filenameIN, filenameOut):
         self.stack = []
         self.vertices = []
         self.triangles = []
-        self.filename = filename
+        self.filenameIN = filenameIN
+        self.filenameOut = filenameOut
+
 
     def initFirstTriangle(self, v1, v2, v3):
 
@@ -29,7 +27,7 @@ class Decompression:
         v2.addEdge([v3])
 
     def decodeConnectivity(self):
-        file = open(self.filename, 'r')
+        file = open(self.filenameIN, 'r')
         v1 = file.readline()
         v2 = file.readline()
         v3 = file.readline()
@@ -89,7 +87,7 @@ class Decompression:
             self.makeTriangle()
             # for triangle in self.triangles:
             #     print("position= ", [n.index for n in triangle.vertices])
-            self.writeDecompressFile("decompresseMesh.obj")
+            self.writeDecompressFile(self.filenameOut)
 
     def makeTriangle(self):
         for vertex in self.vertices:
@@ -226,7 +224,6 @@ class Decompression:
         self.dequantificationNormals(quantification)
         self.remapingInvNormals(BBnMin, BBnMax)
 
-
     def writeDecompressFile(self, filename):
         Parser.writeMesh(self.vertices, self.triangles, filename)
 
@@ -253,3 +250,10 @@ def findVertexWithprediction(listPrediction, prediction):
         rPosition.append(
             (int(focus.position[i]) + int(last.position[i]) - int(beforeLast.position[i]) + int(prediction[i])))
     return rPosition
+
+def decompressionMarkov(sourceFilename, destinationFilename):
+    sourceFile = open(sourceFilename, 'rb')
+    destinationFile = open(destinationFilename, 'wb')
+    engine = Engine()
+    engine.decompress(sourceFile, destinationFile)
+    # engine.decompress(sys.stdin, sys.stdout)

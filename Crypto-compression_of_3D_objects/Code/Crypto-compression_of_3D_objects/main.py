@@ -1,9 +1,8 @@
 from Parser import readMesh
 from Compression import Compression
-from Decompression import Decompression
-
-from Decompression import Decompression
-
+from Compression import Decompression
+from Evaluation import compressionEvaluation
+import copy
 
 def create_compress_file(filename):
     file = open(filename, "w")
@@ -11,32 +10,28 @@ def create_compress_file(filename):
 
 
 if __name__ == '__main__':
-    filename = "compressedMesh.txt"
-    file = create_compress_file(filename)
+    compressedMesh = "results/compressedMesh.txt"
+    compressedMeshMarkov = "results/compressedMeshMarkov.txt"
+    decompressedMeshMarkov = "results/DecompressedMeshMarkov"
+    decompressedMesh = "results/DecompressedMesh.obj"
+    file = create_compress_file(compressedMesh)
     # file.write("test.obj")
     meshFile = "./Mesh/OBJ/simpleSphere.obj"
     # meshFile = "./Mesh/OBJ/simpleSphere.obj"
     vertices, faces = readMesh(meshFile)
     # decompression = Decompression()
-    compression = Compression(vertices, faces, filename)
+    originalMesh = Compression.Compression(vertices, faces, compressedMesh)
+    compression = copy.deepcopy(originalMesh)
     # print(faces[0].vertices)
 
     compression.encodeConnectivity()
     compression.encodeGeometry(1024)
-    quantifyMesh = "quantifyMesh.obj"
+    Compression.compressionMarkov(compressedMesh, compressedMeshMarkov)
     print("//////////////////////DECOMPRESSION//////////////////////")
-    decompression = Decompression(filename)
+    Decompression.decompressionMarkov(compressedMeshMarkov, decompressedMeshMarkov)
+    decompression = Decompression.Decompression(decompressedMeshMarkov, decompressedMesh)
     decompression.decodeConnectivity()
-    # compressMeshHuffman = "meshCompressHuffman.txt"
-    # compression.quantification(256, quantifyMesh,compressMeshHuffman)
-    # print(textUncompress)
+    print("//////////////////////HAUSDORF//////////////////////")
 
-    # print(TextConvertToString)
-    # textDecompresser = huffman.decompresser(textCompresser, dico)
-
-    # print(textDecompresser)
-    # compression.remapingInv(normalizePont, minVertice, maxVertice)
-    # AL = []
-    # Parser.writeMesh(compression.vertices, compression.triangles)
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    hausdorffDistance = compressionEvaluation.HausdorffDistance(originalMesh.vertices, decompression.vertices)
+    print(hausdorffDistance)
