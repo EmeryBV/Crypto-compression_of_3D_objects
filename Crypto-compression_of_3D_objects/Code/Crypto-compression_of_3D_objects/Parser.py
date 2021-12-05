@@ -46,6 +46,7 @@ def readMesh(file):
     meshVertices = np.asarray(mesh.vertices)
     meshTriangles = np.asarray(mesh.faces)
     meshNormals = np.asarray(mesh.vertex_normals)
+    # print(mesh.metadata['vertex_texture'])
 
     neighbors = sortNeighbors(mesh)
     vertices = []
@@ -94,6 +95,7 @@ def writeMesh(listVertice, faces, filename):
     listPosition = []
     listIndex = []
     listNormal = []
+    listTexture = []
 
     for vertex in listVertice:
         listPosition.append(vertex.position)

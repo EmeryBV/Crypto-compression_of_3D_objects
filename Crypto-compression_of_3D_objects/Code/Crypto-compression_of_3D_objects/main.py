@@ -2,6 +2,7 @@ from Parser import readMesh
 from Compression import Compression
 from Compression import Decompression
 from Evaluation import compressionEvaluation
+from Encryption import encryption
 import copy
 
 def create_compress_file(filename):
@@ -17,21 +18,22 @@ if __name__ == '__main__':
     file = create_compress_file(compressedMesh)
     # file.write("test.obj")
     meshFile = "./Mesh/OBJ/simpleSphere.obj"
-    # meshFile = "./Mesh/OBJ/simpleSphere.obj"
     vertices, faces = readMesh(meshFile)
-    # decompression = Decompression()
     originalMesh = Compression.Compression(vertices, faces, compressedMesh)
     compression = copy.deepcopy(originalMesh)
-    # print(faces[0].vertices)
 
     compression.encodeConnectivity()
-    compression.encodeGeometry(1024)
+    key = compression.encodeGeometry(1024)
+
     Compression.compressionMarkov(compressedMesh, compressedMeshMarkov)
+
     print("//////////////////////DECOMPRESSION//////////////////////")
     Decompression.decompressionMarkov(compressedMeshMarkov, decompressedMeshMarkov)
-    decompression = Decompression.Decompression(decompressedMeshMarkov, decompressedMesh)
+    decompression = Decompression.Decompression(decompressedMeshMarkov, decompressedMesh,key)
     decompression.decodeConnectivity()
-    print("//////////////////////HAUSDORF//////////////////////")
 
+    print("//////////////////////HAUSDORF//////////////////////")
     hausdorffDistance = compressionEvaluation.HausdorffDistance(originalMesh.vertices, decompression.vertices)
-    print(hausdorffDistance)
+    print("HAUSDORFF distance: " + str(hausdorffDistance))
+    print("//////////////////////ENCRYPTION//////////////////////")
+    print("key = " , key)

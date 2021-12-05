@@ -4,18 +4,19 @@ from MeshData.Vertex import Vertex
 from Compression.ActiveList import ActiveList
 import re
 from Compression.markov import Engine
-
+from Encryption import encryption
 listPrediction = []
 
 
 class Decompression:
 
-    def __init__(self, filenameIN, filenameOut):
+    def __init__(self, filenameIN, filenameOut,key):
         self.stack = []
         self.vertices = []
         self.triangles = []
         self.filenameIN = filenameIN
         self.filenameOut = filenameOut
+        self.key = key
 
 
     def initFirstTriangle(self, v1, v2, v3):
@@ -103,6 +104,11 @@ class Decompression:
                         if not self.alreadyContainTriangle(triangle):
                             self.triangles.append(Face(triangle))
 
+
+    def decryption(self):
+        decryption  =encryption.Encrypton (self.vertices)
+        decryption.decodingXOR(self.key)
+
     def decodeGeometry(self, file):
         command = file.readline()
         BBvMin = convertToListInt(command)
@@ -159,7 +165,6 @@ class Decompression:
                 vertexquantizePosition.append(
                     float(vertex.position[i]) * (abs(float(minVertex[i])) + abs(float(maxVertex[i]))) - abs(
                         float(minVertex[i])))
-            # print(vertexquantizePosition)
             vertex.position = vertexquantizePosition
 
     def remapingInvNormals(self, minNormal, maxNormal):
@@ -204,20 +209,20 @@ class Decompression:
     def associateCorrectCoord(self, file, quantification, BBvMin, BBvMax):
         for vertex in self.vertices:
             command = file.readline()
-            # print(command)
             position = convertToListInt(command)
             vertex.position = position
         j = 0
+        self.decryption()
         for i in range(3, len(self.vertices)):
             self.vertices[i].position = findVertexWithprediction(listPrediction[j], self.vertices[i].position)
             j += 1
+
         self.dequantificationVertices(quantification)
         self.remapingInvVertices(BBvMin, BBvMax)
 
     def associateCorrectNormal(self, file, quantification, BBnMin, BBnMax):
         for vertex in self.vertices:
             command = file.readline()
-            # print(command)
             normal = convertToListInt(command)
             vertex.normal = normal
 

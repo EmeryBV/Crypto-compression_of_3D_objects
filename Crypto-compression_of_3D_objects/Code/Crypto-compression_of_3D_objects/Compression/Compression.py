@@ -1,7 +1,8 @@
 from MeshData.Vertex import Vertex
 from Compression.ActiveList import ActiveList
 from Compression.markov import Engine
-
+from Encryption import encryption
+import copy
 listPrediction = []
 class Compression:
     def __init__(self, vertices, faces, filename):
@@ -155,7 +156,7 @@ class Compression:
         # print(maxVertice)
         return minVertice, maxVertice
 
-    def getBoundingBoxNormal(self):
+    def getBoundingBoxNormals(self):
         minNormal = [10000, 10000, 10000]
         maxNormal = [0, 0, 0]
 
@@ -167,14 +168,26 @@ class Compression:
                     maxNormal[i] = vertex.normal[i]
         return minNormal, maxNormal
 
+    def getBoundingBoxTextures(self):
+        minTexture = [10000, 10000, 10000]
+        maxTexture = [0, 0, 0]
+
+        for vertex in self.vertices:
+            for i in range(3):
+                if vertex.normal[i] < minTexture[i]:
+                    minTexture[i] = vertex.normal[i]
+                if vertex.normal[i] > maxTexture[i]:
+                    maxTexture[i] = vertex.normal[i]
+        return minTexture, maxTexture
+
     def getFaces(self, v1, v2, v3):
         for face in self.triangles:
             if face.composedOf(v1, v2, v3):
                 return face
 
     def encodeGeometry(self, quantification):
+        key = None
         file = open(self.filename, "a")
-
         quantifiedVertices, quantifiedNormals = self.quantification(quantification)
         file.write("q " + str(quantification) + "\n")
 
@@ -186,13 +199,16 @@ class Compression:
                             prediction(listVertex[0].position, listVertex[1].position, listVertex[2].position)[i])
             listPredictionPosition.append(list)
 
-        for i in range(3):
-            file.write("v ")
-            for j in range(3):
-                file.write(str(int(self.vertices[i].position[j])) + " ")
-            file.write("\n")
+        listEncrypt = []
+        listEncrypt.append(copy.deepcopy(self.vertices[0].position))
+        listEncrypt.append(copy.deepcopy(self.vertices[1].position))
+        listEncrypt.append(copy.deepcopy(self.vertices[2].position))
+        listEncrypt.extend(listPredictionPosition)
 
-        for predictionPosition in listPredictionPosition:
+        EncryptionVertices =encryption.Encrypton (listEncrypt)
+        key = EncryptionVertices.encodingXOR(quantification)
+
+        for predictionPosition in listEncrypt:
             file.write("v ")
             for i in range(3):
                 file.write(str(int(predictionPosition[i])) + " ")
@@ -200,6 +216,7 @@ class Compression:
         file.close()
 
         self.writeNormal(quantifiedNormals)
+        return key
 
 
     def remapingVertices(self, minVertices, maxVertices):
@@ -274,7 +291,7 @@ class Compression:
         quantifiedVertices = self.quantifyVertices(normalizePointVertices, precision)
 
 
-        minNormals, maxNormals = self.getBoundingBoxNormal()
+        minNormals, maxNormals = self.getBoundingBoxNormals()
         file.write("BBnMin" + str(minNormals) + "\n")
         file.write("BBnMax" + str(maxNormals) + "\n")
         normalizePointNormals = self.remapingNormals(minNormals, maxNormals)
