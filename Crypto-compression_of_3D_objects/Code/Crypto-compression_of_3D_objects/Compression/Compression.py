@@ -185,8 +185,9 @@ class Compression:
             if face.composedOf(v1, v2, v3):
                 return face
 
-    def encodeGeometry(self, quantification):
-        key = None
+    def encodeGeometry(self, seed,quantification):
+        keyXOR = None
+        keyShuffling = None
         file = open(self.filename, "a")
         quantifiedVertices, quantifiedNormals = self.quantification(quantification)
         file.write("q " + str(quantification) + "\n")
@@ -206,7 +207,8 @@ class Compression:
         listEncrypt.extend(listPredictionPosition)
 
         EncryptionVertices =encryption.Encrypton (listEncrypt)
-        key = EncryptionVertices.encodingXOR(quantification)
+        keyXOR = EncryptionVertices.encodingXOR(seed,quantification)
+        keyShuffling = EncryptionVertices.shufflingEncryption(seed)
 
         for predictionPosition in listEncrypt:
             file.write("v ")
@@ -216,7 +218,7 @@ class Compression:
         file.close()
 
         self.writeNormal(quantifiedNormals)
-        return key
+        return keyXOR, keyShuffling
 
 
     def remapingVertices(self, minVertices, maxVertices):

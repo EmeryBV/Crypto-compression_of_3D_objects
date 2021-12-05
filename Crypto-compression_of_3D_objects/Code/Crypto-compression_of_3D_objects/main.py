@@ -18,22 +18,24 @@ if __name__ == '__main__':
     file = create_compress_file(compressedMesh)
     # file.write("test.obj")
     meshFile = "./Mesh/OBJ/simpleSphere.obj"
+    seed = 2563
     vertices, faces = readMesh(meshFile)
     originalMesh = Compression.Compression(vertices, faces, compressedMesh)
     compression = copy.deepcopy(originalMesh)
 
     compression.encodeConnectivity()
-    key = compression.encodeGeometry(1024)
+    keyXOR, keyShuffling = compression.encodeGeometry(seed,1024)
 
     Compression.compressionMarkov(compressedMesh, compressedMeshMarkov)
 
     print("//////////////////////DECOMPRESSION//////////////////////")
     Decompression.decompressionMarkov(compressedMeshMarkov, decompressedMeshMarkov)
-    decompression = Decompression.Decompression(decompressedMeshMarkov, decompressedMesh,key)
+    decompression = Decompression.Decompression(decompressedMeshMarkov, decompressedMesh,keyXOR, keyShuffling)
     decompression.decodeConnectivity()
 
     print("//////////////////////HAUSDORF//////////////////////")
     hausdorffDistance = compressionEvaluation.HausdorffDistance(originalMesh.vertices, decompression.vertices)
     print("HAUSDORFF distance: " + str(hausdorffDistance))
     print("//////////////////////ENCRYPTION//////////////////////")
-    print("key = " , key)
+    print("keyXor = " , keyXOR)
+    print("keyShuffling = " , keyShuffling)

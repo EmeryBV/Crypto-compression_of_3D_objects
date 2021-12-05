@@ -10,13 +10,14 @@ listPrediction = []
 
 class Decompression:
 
-    def __init__(self, filenameIN, filenameOut,key):
+    def __init__(self, filenameIN, filenameOut,keyXOR, keyShufffling):
         self.stack = []
         self.vertices = []
         self.triangles = []
         self.filenameIN = filenameIN
         self.filenameOut = filenameOut
-        self.key = key
+        self.keyXOR = keyXOR
+        self.keyShuffling = keyShufffling
 
 
     def initFirstTriangle(self, v1, v2, v3):
@@ -107,7 +108,8 @@ class Decompression:
 
     def decryption(self):
         decryption  =encryption.Encrypton (self.vertices)
-        decryption.decodingXOR(self.key)
+        # decryption.shufflingDecryption(self.keyShuffling)
+        # decryption.decodingXOR(self.keyXOR)
 
     def decodeGeometry(self, file):
         command = file.readline()
