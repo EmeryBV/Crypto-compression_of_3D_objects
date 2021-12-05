@@ -108,8 +108,8 @@ class Decompression:
 
     def decryption(self):
         decryption  =encryption.Encrypton (self.vertices)
-        # decryption.shufflingDecryption(self.keyShuffling)
-        # decryption.decodingXOR(self.keyXOR)
+        decryption.shufflingDecryption(self.keyShuffling)
+        decryption.decodingXOR(self.keyXOR)
 
     def decodeGeometry(self, file):
         command = file.readline()

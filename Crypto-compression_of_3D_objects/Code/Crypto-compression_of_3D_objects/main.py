@@ -17,7 +17,7 @@ if __name__ == '__main__':
     decompressedMesh = "results/DecompressedMesh.obj"
     file = create_compress_file(compressedMesh)
     # file.write("test.obj")
-    meshFile = "./Mesh/OBJ/simpleSphere.obj"
+    meshFile = "/home/bourget-vecchio/Documents/Master_IMAGINA/M2/PROJET IMAGE/Crypto-compression_of_3D_objects/Code/Crypto-compression_of_3D_objects/Mesh/OBJ/simpleSphere.obj"
     seed = 2563
     vertices, faces = readMesh(meshFile)
     originalMesh = Compression.Compression(vertices, faces, compressedMesh)
