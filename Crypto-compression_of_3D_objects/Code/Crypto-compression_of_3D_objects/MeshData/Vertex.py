@@ -69,8 +69,6 @@ class Vertex:
             containEdge = False
             for edge in self.edges:
                 if vertex.index in edge.vertices:
-                    # print("Erreur lors de l'insertion du vertex " + str(vertex.index)
-                    #       + ", ce vertex est déjà présent dans une arrête")
                     containEdge = True
                     break
             if not containEdge:

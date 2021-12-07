@@ -1,6 +1,5 @@
 # Blender v2.93.5 OBJ File: ''
 # www.blender.org
-mtllib bunnyExtraDecimated.mtl
 o Bunny
 v -0.009357 0.012797 0.136099
 v 0.006779 0.009720 0.143201
@@ -3814,7 +3813,6 @@ vn -0.3691 -0.8744 0.3150
 vn -0.3223 -0.8713 0.3701
 vn 0.1204 -0.9886 -0.0906
 vn -0.2026 -0.9746 -0.0950
-usemtl bunnyMtl
 s 1
 f 10//1 11//2 12//3
 f 7//4 9//5 15//6

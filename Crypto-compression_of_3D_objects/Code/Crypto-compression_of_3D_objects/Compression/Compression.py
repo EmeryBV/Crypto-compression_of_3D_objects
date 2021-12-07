@@ -38,13 +38,13 @@ class Compression:
             AL = self.stack.pop(len(self.stack) - 1)
             AL.nextFocus()
 
-            AL.sortFocusVertexNeighbors(self.vertices)
+            AL.sortFocusVertexNeighbors(self.vertices, self.triangles)
 
             while AL.vertexList:
                 print("\n")
-                print("FOCUS VERTEX = ", AL.focusVertex.index)
+                print("Focus vertex : ", AL.focusVertex.index )
                 print("Vertex in AL = ", [n.index for n in AL.vertexList])
-                print("NEIGHBORS = ", [n for n in AL.focusVertex.neighbors])
+                print("NEIGHBORS = ", [[n, self.vertices[n].isEncoded()] for n in AL.focusVertex.neighbors])
 
                 e = AL.nextFreeEdge()
                 if e:
@@ -60,14 +60,29 @@ class Compression:
 
                         AL.addVertex(u)
                         traversalOrder.append(u.index)
-                        # encodedeGeometry(AL)
 
                     elif AL.contains(u):
-                        ALBis = AL.split(u)
-                        print("Split occuring on ", u.index)
-                        # print("AL : ", [k.index for k in AL.vertexList], "ALBis : ", [k.index for k in ALBis.vertexList])
-                        self.stack.append(ALBis)
+
                         self.encodeVertexInFile("split", vertex=u, offset=str(AL.getOffset(u)))
+                        face = self.getFaces(u, AL.focusVertex, AL.vertexList[ len(AL.vertexList) -1 ])
+
+                        for edge in face.edges:
+                            if  u not in edge.vertices or  AL.focusVertex not in edge.vertices:
+                                continue
+                            if not edge.isEncoded():
+                                print("encode", edge.vertices)
+                                edge.encode()
+                        ALBis = AL.split(u)
+
+                        print("Split occuring on ", u.index)
+                        print("AL : ", [n.index for n in AL.vertexList])
+                        print("ALBIS : ", [n.index for n in ALBis.vertexList])
+                        AL.nextFocus()
+                        AL.sortFocusVertexNeighbors( self.vertices, self.triangles )
+
+                        print("Focus vertex after split : ", AL.focusVertex.index )
+
+                        self.stack.append(ALBis)
 
                     else:
                         for AList in self.stack:
@@ -75,29 +90,17 @@ class Compression:
                                 print("Vertex where u is found ", [n.index for n in AList.vertexList])
                                 self.encodeVertexInFile("merge", vertex=u, index=u.index, offset=str(AL.getOffset(u)))
                                 AL.merge(AList, u)
-                                # AL = AList
                                 self.stack.remove(AList)
                                 break
 
-                    # for vertex in self.vertices:
-                    #     if vertex.isFull():
-                    #         valenceVertex = int(vertex.valence)
-                    #         for k in range(0, valenceVertex):
-                    #             vertex2 = self.vertices[vertex.neighbors[k - 1]]
-                    #             vertex3 = self.vertices[vertex.neighbors[k]]
-                    #             if not vertex2.getEdge(vertex2, vertex3).isEncoded() and not vertex2.isFull() and not vertex3.isFull():
-                    #                 self.encodeFace(vertex, vertex2, vertex3)
+                while AL.removeFullVertices( self.triangles ):
+                    pass
 
-                AL.removeFullVertices()
-
-                # for AL2 in self.stack:
-                #     AL2.removeFullVertices()
                 if AL.vertexList:
                     if AL.focusVertex.isFull():
-                        self.encodeFace(AL.focusVertex, AL.vertexList[0], AL.vertexList[len(AL.vertexList) - 1])
                         AL.nextFocus()
-                        print("Next focus vertex", AL.focusVertex.index)
-                        AL.sortFocusVertexNeighbors(self.vertices)
+                        print( "Next focus vertex" , AL.focusVertex.index )
+                        AL.sortFocusVertexNeighbors( self.vertices, self.triangles )
                 else:
                     break
 
@@ -122,7 +125,7 @@ class Compression:
 
     def encodeFace(self, v1, v2, v3):
         face = self.getFaces(v1, v2, v3)
-        # if face is not None and v1 != v2 and v2 != v3 and v1 != v3:
+
         for edge in face.edges:
             if not edge.isEncoded():
                 print("encode", edge.vertices)
@@ -134,7 +137,7 @@ class Compression:
             vertex.encode()
             line = " ".join([instruction, str(valence)])
         elif instruction == "split":
-            line = " ".join([str(vertex.index), instruction, str(offset)])
+            line = " ".join([instruction, str(offset)])
         else:
             line = " ".join([str(vertex.index), instruction, str(index), str(offset)])
 
@@ -161,6 +164,7 @@ class Compression:
         maxNormal = [0, 0, 0]
 
         for vertex in self.vertices:
+            print(vertex.normal)
             for i in range(3):
                 if vertex.normal[i] < minNormal[i]:
                     minNormal[i] = vertex.normal[i]
@@ -184,6 +188,7 @@ class Compression:
         for face in self.triangles:
             if face.composedOf(v1, v2, v3):
                 return face
+        print( "No face found between" ,v1.index, v2.index, v3.index)
 
     def encodeGeometry(self, seed,quantification):
         keyXOR = None
@@ -232,7 +237,6 @@ class Compression:
             normalizeVertex.clear()
             for i in range(0, 3):
                 normalizeVertex.append((vertex.position[i] + abs(minVertices[i])) / sumExtremum[i])
-            newVertex = 0
             newVertex = Vertex(vertex.index, normalizeVertex.copy(), vertex.neighbors, [])
             pointNormalize[l] = newVertex
             l += 1

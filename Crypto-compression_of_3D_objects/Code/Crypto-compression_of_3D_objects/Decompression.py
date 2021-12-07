@@ -1,24 +1,22 @@
+import random
+
 import Parser
-from MeshData.Face import Face
-from MeshData.Vertex import Vertex
-from Compression.ActiveList import ActiveList
+from Edge import Edge
+from Face import Face
+from Vertex import Vertex
+from ActiveList import ActiveList
 import re
-from Compression.markov import Engine
-from Encryption import encryption
-listPrediction = []
+import numpy as np
+import decimal as dc
 
 
 class Decompression:
 
-    def __init__(self, filenameIN, filenameOut,keyXOR, keyShufffling):
+    def __init__(self, filename):
         self.stack = []
         self.vertices = []
         self.triangles = []
-        self.filenameIN = filenameIN
-        self.filenameOut = filenameOut
-        self.keyXOR = keyXOR
-        self.keyShuffling = keyShufffling
-
+        self.filename = filename
 
     def initFirstTriangle(self, v1, v2, v3):
 
@@ -29,7 +27,7 @@ class Decompression:
         v2.addEdge([v3])
 
     def decodeConnectivity(self):
-        file = open(self.filenameIN, 'r')
+        file = open(self.filename, 'r')
         v1 = file.readline()
         v2 = file.readline()
         v3 = file.readline()
@@ -59,9 +57,6 @@ class Decompression:
                     print("ACTIVE LIST", [n.index for n in AL.vertexList])
 
                     newVertex = Vertex(i, position=[], neighbors=[], edges=[], valence=convertToInt(command))
-                    listPrediction.append([AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1],
-                                           AL.vertexList[len(AL.vertexList) - 2]])
-
                     AL.makeConnectivity(AL.focusVertex, newVertex)
                     self.vertices.append(newVertex)
                     print("FOCUS: Voisin= ", [n.index for n in AL.focusVertex.neighbors])
@@ -78,9 +73,6 @@ class Decompression:
                     ALBis, splitVertex = AL.splitDecompression(convertToInt(command))
                     print("Split vertex : ", str(splitVertex.index))
                     AL.makeConnectivity(AL.focusVertex, splitVertex, append = False )  # connect previous focus with splitvertex
-                    listPrediction.append([AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1],
-                                           AL.vertexList[len(AL.vertexList) - 2]])
-
                     AL.nextFocus()
                     print("FOCUS: Voisin= ", [n.index for n in AL.focusVertex.neighbors])
                     print("FOCUS: Edge  = ", [n.vertices for n in AL.focusVertex.edges])
@@ -115,7 +107,7 @@ class Decompression:
 
         self.orderVerticeList()
         self.makeTriangle()
-        self.writeDecompressFile(self.filenameOut)
+        self.writeDecompressFile("decompressedMesh.obj")
 
     def makeTriangle(self):
         for vertex in self.vertices:
@@ -128,79 +120,21 @@ class Decompression:
                         if not self.alreadyContainTriangle(triangle):
                             self.triangles.append(Face(triangle))
 
-
-    def decryption(self):
-        decryption  =encryption.Encrypton (self.vertices)
-        decryption.shufflingDecryption(self.keyShuffling)
-        decryption.decodingXOR(self.keyXOR)
-
     def decodeGeometry(self, file):
-        command = file.readline()
-        BBvMin = convertToListInt(command)
-        print("BBvmin" + str(BBvMin))
 
         command = file.readline()
-        BBvMax = convertToListInt(command)
-        print("BBvMax" + str(BBvMax))
+        index = 0
 
-        command = file.readline()
-        BBnMin = convertToListInt(command)
-        print("BBnmin" + str(BBnMin))
+        while ("v" in command):
+            self.associateCorrectCoord(command, index)
+            command = file.readline()
+            index += 1
 
-        command = file.readline()
-        BBnMax = convertToListInt(command)
-        print("BBnMax" + str(BBnMax))
-
-        command = file.readline()
-        quantification = convertToInt(command)
-        print("quantification " + str(quantification))
-
-        self.associateCorrectCoord(file, quantification, BBvMin, BBvMax)
-        self.associateCorrectNormal(file, quantification, BBvMin, BBvMax)
-
-    def getBoundingBoxVertices(self):
-        minVertice = [10000, 10000, 10000]
-        maxVertice = [0, 0, 0]
-        for vertex in self.vertices:
-            for i in range(3):
-                if int(vertex.position[i]) < int(minVertice[i]):
-                    minVertice[i] = int(vertex.position[i])
-                if int(vertex.position[i]) > int(maxVertice[i]):
-                    maxVertice[i] = int(vertex.position[i])
-        return minVertice, maxVertice
-
-    def dequantificationVertices(self, coefficient):
-        for vertex in self.vertices:
-            verticesDequantifiePosition = []
-            for i in range(3):
-                verticesDequantifiePosition.append(float(vertex.position[i]) / float(coefficient))
-            vertex.position = verticesDequantifiePosition
-
-    def dequantificationNormals(self, coefficient):
-        for vertex in self.vertices:
-            verticesDequantifieNormals = []
-            for i in range(3):
-                verticesDequantifieNormals.append(float(vertex.normal[i]) / float(coefficient))
-            vertex.normal = verticesDequantifieNormals
-
-    def remapingInvVertices(self, minVertex, maxVertex):
-        for vertex in self.vertices:
-            vertexquantizePosition = []
-            for i in range(3):
-                vertexquantizePosition.append(
-                    float(vertex.position[i]) * (abs(float(minVertex[i])) + abs(float(maxVertex[i]))) - abs(
-                        float(minVertex[i])))
-            vertex.position = vertexquantizePosition
-
-    def remapingInvNormals(self, minNormal, maxNormal):
-        for vertex in self.vertices:
-            vertexquantizeNormal = []
-            for i in range(3):
-                vertexquantizeNormal.append(
-                    float(vertex.normal[i]) * (abs(float(minNormal[i])) + abs(float(maxNormal[i]))) - abs(
-                        float(minNormal[i])))
-            # print(vertexquantizePosition)
-            vertex.normal = vertexquantizeNormal
+        index = 0
+        while ("n" in command):
+            self.associateCorrectNormal(command, index)
+            command = file.readline()
+            index += 1
 
     def orderVerticeList(self):
         change = True
@@ -230,28 +164,18 @@ class Decompression:
                 return True
         return False
 
-    def associateCorrectCoord(self, file, quantification, BBvMin, BBvMax):
+    def associateCorrectCoord(self, command, index):
+        coordList = convertToListInt(command)
         for vertex in self.vertices:
-            command = file.readline()
-            position = convertToListInt(command)
-            vertex.position = position
-        j = 0
-        self.decryption()
-        for i in range(3, len(self.vertices)):
-            self.vertices[i].position = findVertexWithprediction(listPrediction[j], self.vertices[i].position)
-            j += 1
+            if vertex.index == index:
+                vertex.position = coordList
 
-        self.dequantificationVertices(quantification)
-        self.remapingInvVertices(BBvMin, BBvMax)
-
-    def associateCorrectNormal(self, file, quantification, BBnMin, BBnMax):
+    def associateCorrectNormal(self, command, index):
+        coordList = convertToListInt(command)
         for vertex in self.vertices:
-            command = file.readline()
-            normal = convertToListInt(command)
-            vertex.normal = normal
-
-        self.dequantificationNormals(quantification)
-        self.remapingInvNormals(BBnMin, BBnMax)
+            # print(index)
+            if vertex.index == index:
+                vertex.normal = coordList
 
     def writeDecompressFile(self, filename):
         Parser.writeMesh(self.vertices, self.triangles, filename)
@@ -266,23 +190,3 @@ def convertToInt(instruction):
 
 def convertToListInt(instruction):
     return re.findall(r"[-+]?\d*\.*\d+", instruction)
-
-
-def findVertexWithprediction(listPrediction, prediction):
-    focus = listPrediction[0]
-    beforeLast = listPrediction[2]
-    last = listPrediction[1]
-
-    rPosition = []
-
-    for i in range(0, 3):
-        rPosition.append(
-            (int(focus.position[i]) + int(last.position[i]) - int(beforeLast.position[i]) + int(prediction[i])))
-    return rPosition
-
-def decompressionMarkov(sourceFilename, destinationFilename):
-    sourceFile = open(sourceFilename, 'rb')
-    destinationFile = open(destinationFilename, 'wb')
-    engine = Engine()
-    engine.decompress(sourceFile, destinationFile)
-    # engine.decompress(sys.stdin, sys.stdout)

@@ -1,54 +1,96 @@
+import objParser
+import pprint
 import trimesh
+import open3d as o3d
 import numpy as np
-import networkx as nx
+from collections import OrderedDict
 
 from MeshData.Edge import Edge
 from MeshData.Face import Face
 from MeshData.Vertex import Vertex
+import sys
+import numpy
+numpy.set_printoptions(threshold=sys.maxsize)
 
+def radial_sort(points,
+                origin,
+                normal):
 
-def getNeighbors(vertex, faces):
-    neighbors = set()
-    for l in faces:
-        if vertex in l:
-            neighbors = set.union(neighbors, set(v for v in l if v != vertex))
+    # create two axis perpendicular to each other and the normal,
+    # and project the points onto them
+    axis0 = [normal[0], normal[2], -normal[1]]
+    axis1 = np.cross(normal, axis0)
+    ptVec = points - origin
+    pr0 = np.dot(ptVec, axis0)
+    pr1 = np.dot(ptVec, axis1)
 
-    return neighbors
+    # calculate the angles of the points on the axis
+    angles = np.arctan2(pr0, pr1)
 
+    # return the points sorted by angle
+    return np.argsort(angles)
 
 def project(planeVertex, planeNormal, vertex):
     vec = np.subtract(vertex, planeVertex)
     return np.subtract(vertex, np.dot(vec, planeNormal) * planeNormal)
 
+def sortNeighbors2(vertices, normals, neighbors):
+    sortedNeighbors =  {}
+    for i in range(0, len(vertices)):
+        projectedPoints = []
+        for n in neighbors[i]:
+            projectedPoints.append( project( vertices[i], normals[i], vertices[n] ) )
+        vec = projectedPoints[0] - vertices[i]
+        a = {}
+        a[ list(neighbors[i])[0] ] = 0.
+        for j in range(1, len(neighbors[i])):
+            n = list( neighbors[i] )[j]
+            vec2 = projectedPoints[j] - vertices[i]
+            cross = np.cross( vec, vec2)
+            crossL = np.linalg.norm(cross)
+            angle = np.math.atan2( np.dot( cross,normals[i] )  , np.dot(vec, vec2) )
+            a[n] = angle * 180. / np.pi
+            if a[n] < 0. :
+                a[n] += 360.
 
-def sortNeighbors(mesh):
-    g = nx.from_edgelist(mesh.edges_unique)
-    one_ring = [list(g[i].keys()) for i in range(len(mesh.vertices))]
-    one_ordered = [nx.cycle_basis(g.subgraph(i))[0] for i in one_ring]
+        ordered_dic = OrderedDict(sorted(a.items(), key=lambda t: t[1]))
+        sortedNeighbors[i] = ordered_dic
 
-    for i in range(0, len(mesh.vertices)):
+    final = []
+    for sortedN in sortedNeighbors.items():
+        final.append(list(sortedN[1].keys()))
 
-        argSort = trimesh.points.radial_sort( [ np.asarray( mesh.vertices[n] ) for n in one_ordered[i]], mesh.vertices[i], mesh.vertex_normals[i])
-        one_ordered[i] = [ one_ordered[i][j] for j in argSort ]
-        one_ordered[i].reverse()
-
-        # if np.dot(mesh.vertex_normals[i], [0., 0., 1.]) > 0.:
-        #     print( mesh.vertex_normals[i], np.dot(mesh.vertex_normals[i], [0., 0., 1.])  )
-        #     one_ordered[i].reverse()
-        #     print( i, one_ordered[i] )
-
-    return one_ordered
-
+    return final
 
 def readMesh(file):
-    trimesh.util.attach_to_log()
-    mesh = trimesh.load_mesh(file, "obj", process=False, maintain_order=True)
-    meshVertices = np.asarray(mesh.vertices)
-    meshTriangles = np.asarray(mesh.faces)
-    meshNormals = np.asarray(mesh.vertex_normals)
-    # print(mesh.metadata['vertex_texture'])
-    mesh.show()
-    neighbors = sortNeighbors(mesh)
+    mesh = o3d.io.read_triangle_mesh( file )
+    mesh.remove_duplicated_vertices()
+    mesh.compute_vertex_normals()
+    meshVertices = (np.asarray( mesh.vertices ))
+    meshTriangles =(np.asarray( mesh.triangles ))
+    meshNormals = (np.asarray( mesh.vertex_normals ))
+
+    # meshVertices, meshNormals, meshTriangles, meshTextures = objParser.parseOBJ( file )
+
+    neighbors = dict()
+    for triangle in meshTriangles:
+        v0 = triangle[0]
+        v1 = triangle[1]
+        v2 = triangle[2]
+        if v0 in neighbors.keys():
+            neighbors[v0] = set.union( neighbors[v0], {v1, v2} )
+        else:
+            neighbors[v0] = {v1, v2}
+        if v1 in neighbors.keys():
+            neighbors[v1] = set.union(neighbors[v1], {v0, v2})
+        else:
+            neighbors[v1] = {v0, v2}
+        if v2 in neighbors.keys():
+            neighbors[v2] = set.union(neighbors[v2], {v0, v1})
+        else:
+            neighbors[v2] = {v0, v1}
+
+    neighbors = sortNeighbors2(meshVertices, meshNormals, neighbors)
     vertices = []
     allEdges = {}
     for i in range(0, len(meshVertices)):
@@ -61,15 +103,12 @@ def readMesh(file):
             else:
                 allEdges[(i, n)] = Edge([i, n])
                 edges.append( allEdges[(i, n)] )
-
-        vertices.append(Vertex(i, meshVertices[i], neighbors[i], edges, normal =meshNormals[i]))
-        # print( i, len(neighbors[i]), [edge.vertices for edge in edges] )
+        vertices.append(Vertex(i, meshVertices[i], neighbors[i], edges, normal = meshNormals[i]))
 
     faces = []
     for i in range(0, len(meshTriangles)):
         edges = []
         face = meshTriangles[i]
-
         if (face[0], face[1]) in allEdges.keys():
             edges.append( allEdges[(face[0], face[1])] )
         else:
@@ -95,7 +134,6 @@ def writeMesh(listVertice, faces, filename):
     listPosition = []
     listIndex = []
     listNormal = []
-    listTexture = []
 
     for vertex in listVertice:
         listPosition.append(vertex.position)
@@ -106,11 +144,11 @@ def writeMesh(listVertice, faces, filename):
         for vertex in triangle.vertices:
             listListIndex.append(vertex.index)
         listIndex.append(listListIndex)
-
+    pprint.pprint   ( listPosition )
     mesh = trimesh.Trimesh(listPosition, listIndex, process=False,vertex_normals=listNormal, maintain_order=True)
 
     trimesh.repair.fix_winding(mesh)
 
-    meshText = trimesh.exchange.obj.export_obj(mesh,include_normals = True,digits=10)
+    meshText = trimesh.exchange.obj.export_obj(mesh,include_normals = True,digits=0)
     file = open(filename, "w")
     file.write(meshText)

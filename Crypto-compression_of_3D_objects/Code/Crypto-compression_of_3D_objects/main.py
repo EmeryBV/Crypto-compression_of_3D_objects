@@ -14,10 +14,10 @@ if __name__ == '__main__':
     compressedMesh = "results/compressedMesh.txt"
     compressedMeshMarkov = "results/compressedMeshMarkov.txt"
     decompressedMeshMarkov = "results/DecompressedMeshMarkov"
-    decompressedMesh = "results/DecompressedMesh.obj"
+    decompressedMesh = "results/DecompressedMesh2.obj"
     file = create_compress_file(compressedMesh)
     # file.write("test.obj")
-    meshFile = "/home/bourget-vecchio/Documents/Master_IMAGINA/M2/PROJET IMAGE/Crypto-compression_of_3D_objects/Code/Crypto-compression_of_3D_objects/Mesh/OBJ/simpleSphere.obj"
+    meshFile = "./Mesh/OBJ/simpleSphere.obj"
     seed = 2563
     quantification = 1024
     vertices, faces = readMesh(meshFile)
