@@ -3,7 +3,7 @@ from MeshData.Edge import Edge
 
 class Vertex:
 
-    def __init__(self, index, position, neighbors, edges=None, valence=None, normal = None):
+    def __init__(self, index, position, neighbors, edges=None, valence=None, normal = None, texture = None):
         if edges is None:
             edges = []
         self.index = index
@@ -19,6 +19,7 @@ class Vertex:
         self.focusVertex = False
         self.encoded = False
         self.normal = normal
+        self.texture = texture
 
     def setFocus(self, state):
         self.focusVertex = state

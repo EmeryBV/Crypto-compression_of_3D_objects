@@ -15,9 +15,9 @@ if __name__ == '__main__':
     decompressedMesh = "results/DecompressedMesh2.obj"
     file = create_compress_file(compressedMesh)
     # file.write("test.obj")
-    meshFile = "./Mesh/OBJ/suzanne.obj"
+    meshFile = "./Mesh/OBJ/cube.obj"
     seed = 2563
-    quantification = 1024
+    quantification = 128
     vertices, faces = readMesh(meshFile)
     originalMesh = Compression.Compression(vertices, faces, compressedMesh)
     compression = copy.deepcopy(originalMesh)

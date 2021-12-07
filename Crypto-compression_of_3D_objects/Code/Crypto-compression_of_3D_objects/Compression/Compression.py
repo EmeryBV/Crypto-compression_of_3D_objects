@@ -125,6 +125,16 @@ class Compression:
 
         file.close()
 
+    def writeTexture(self, listQuantifiedTextures):
+        file = open(self.filename, "a")
+        for vertex in listQuantifiedTextures:
+            line = ""
+            for i in range(0, 2):
+
+                line += "".join(str(vertex.texture[i])) + " "
+            file.write("t " + line + "\n")
+        file.close()
+
     def encodeFace(self, v1, v2, v3):
         face = self.getFaces(v1, v2, v3)
 
@@ -153,12 +163,11 @@ class Compression:
 
         for vertex in self.vertices:
             for i in range(3):
+
                 if vertex.position[i] < minVertice[i]:
                     minVertice[i] = vertex.position[i]
                 if vertex.position[i] > maxVertice[i]:
                     maxVertice[i] = vertex.position[i]
-        # print(minVertice)
-        # print(maxVertice)
         return minVertice, maxVertice
 
     def getBoundingBoxNormals(self):
@@ -178,11 +187,11 @@ class Compression:
         maxTexture = [0, 0, 0]
 
         for vertex in self.vertices:
-            for i in range(3):
-                if vertex.normal[i] < minTexture[i]:
-                    minTexture[i] = vertex.normal[i]
-                if vertex.normal[i] > maxTexture[i]:
-                    maxTexture[i] = vertex.normal[i]
+            for i in range(2):
+                if vertex.texture[i] < minTexture[i]:
+                    minTexture[i] = vertex.texture[i]
+                if vertex.texture[i] > maxTexture[i]:
+                    maxTexture[i] = vertex.texture[i]
         return minTexture, maxTexture
 
     def getFaces(self, v1, v2, v3):
@@ -195,7 +204,7 @@ class Compression:
         keyXOR = None
         keyShuffling = None
         file = open(self.filename, "a")
-        quantifiedVertices, quantifiedNormals = self.quantification(quantification)
+        quantifiedVertices, quantifiedNormals, quantifiedTexture = self.quantification(quantification)
         file.write("q " + str(quantification) + "\n")
 
         listPredictionPosition = []
@@ -223,7 +232,9 @@ class Compression:
             file.write("\n")
         file.close()
 
+
         self.writeNormal(quantifiedNormals)
+        self.writeTexture(quantifiedTexture)
         return keyXOR, keyShuffling
 
 
@@ -260,6 +271,23 @@ class Compression:
             l += 1
         return pointNormalize
 
+    def remapingTextures(self, minTexture, maxTexture):
+        pointNormalize = (len(self.vertices)) * [None]
+        sumExtremum = []
+        for i in range(3):
+            sumExtremum.append(abs(minTexture[i]) + abs(maxTexture[i]))
+        l = 0
+        for vertex in self.vertices:
+            normalizeTexture = []
+            normalizeTexture.clear()
+            for i in range(0, 2):
+                normalizeTexture.append((vertex.texture[i] + abs(minTexture[i])) / sumExtremum[i])
+            newVertex = 0
+            newVertex = Vertex(vertex.index, vertex.position, vertex.neighbors, [], normal=vertex.normal, texture=normalizeTexture.copy())
+            pointNormalize[l] = newVertex
+            l += 1
+        return pointNormalize
+
     def quantifyVertices(self, pointNormalize, coefficient):
         quantifiedVertices = len(pointNormalize) * [None]
         l = 0
@@ -288,23 +316,48 @@ class Compression:
             l += 1
         return quantifiedNormals
 
+    def quantifyTextures(self, pointNormalizeTextures, coefficient):
+        quantifiedTextures = len(pointNormalizeTextures) * [None]
+        l = 0
+        for vertex in pointNormalizeTextures:
+            verticesQuantifieTextures = []
+            for i in range(2):
+                # print(vertex.normal)
+                verticesQuantifieTextures.append(round(vertex.texture[i] * coefficient))
+            texturesQuantifie = Vertex(vertex.index, vertex.position, vertex.neighbors,
+                                      normal=vertex.normal, texture= verticesQuantifieTextures.copy())
+            quantifiedTextures[l] = texturesQuantifie
+            l += 1
+        print([n.texture for n in quantifiedTextures])
+        return quantifiedTextures
+
     def quantification(self,precision):
+        #VERTICES
         minVertices, maxVertices = self.getBoundingBoxVertices()
         file = open(self.filename, "a")
         file.write("BBvMin" + str(minVertices) + "\n")
         file.write("BBvMax" + str(maxVertices) + "\n")
-
         normalizePointVertices = self.remapingVertices(minVertices, maxVertices)
         quantifiedVertices = self.quantifyVertices(normalizePointVertices, precision)
 
-
+        #NORMALS
         minNormals, maxNormals = self.getBoundingBoxNormals()
         file.write("BBnMin" + str(minNormals) + "\n")
         file.write("BBnMax" + str(maxNormals) + "\n")
         normalizePointNormals = self.remapingNormals(minNormals, maxNormals)
         quantifiedNormals = self.quantifyNormals(normalizePointNormals, precision)
+
+        #TEXTURES
+        minTextures, maxTextures = self.getBoundingBoxTextures()
+        file.write("BBtMin" + str(minTextures) + "\n")
+        file.write("BBtMax" + str(maxTextures) + "\n")
+        normalizePointTextures = self.remapingTextures(minTextures, maxTextures)
+        quantifiedTextures= self.quantifyTextures(normalizePointTextures, precision)
+
+
+
         file.close()
-        return quantifiedVertices, quantifiedNormals
+        return quantifiedVertices, quantifiedNormals, quantifiedTextures
         # verticeDequantifie = self.dequantificationVertices(quantifiedVertices, precision)
         # reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
         # Parser.writeMesh(quantifiedVertices, self.triangles, filenameMeshQuantify)

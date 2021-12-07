@@ -3,6 +3,7 @@ from MeshData.Face import Face
 from MeshData.Vertex import Vertex
 from Compression.ActiveList import ActiveList
 import re
+import math
 from Compression.markov import Engine
 from Encryption import encryption
 listPrediction = []
@@ -111,11 +112,11 @@ class Decompression:
         if "order" in command:
             self.associateCorrectIndex(command)
 
-        self.decodeGeometry(file)
-
+        precision = self.decodeGeometry(file)
+        print("precision " , precision)
         self.orderVerticeList()
         self.makeTriangle()
-        self.writeDecompressFile(self.filenameOut)
+        self.writeDecompressFile(self.filenameOut,precision)
 
     def makeTriangle(self):
         for vertex in self.vertices:
@@ -152,12 +153,22 @@ class Decompression:
         print("BBnMax" + str(BBnMax))
 
         command = file.readline()
+        BBtMin = convertToListInt(command)
+        print("BBtmin" + str(BBtMin))
+
+        command = file.readline()
+        BBtMax = convertToListInt(command)
+        print("BBtMax" + str(BBtMax))
+
+        command = file.readline()
         quantification = convertToInt(command)
         print("quantification " + str(quantification))
 
         self.associateCorrectCoord(file, quantification, BBvMin, BBvMax)
         self.associateCorrectNormal(file, quantification, BBvMin, BBvMax)
+        self.associateCorrectTexture(file, quantification, BBtMin, BBtMax)
 
+        return precision_and_scale(float(BBnMin[0]))
 
     def getBoundingBoxVertices(self):
         minVertice = [10000, 10000, 10000]
@@ -185,6 +196,13 @@ class Decompression:
                 verticesDequantifieNormals.append(float(vertex.normal[i]) / float(coefficient))
             vertex.normal = verticesDequantifieNormals
 
+    def dequantificationTextures(self, coefficient):
+        for vertex in self.vertices:
+            verticesDequantifieTextures = []
+            for i in range(2):
+                verticesDequantifieTextures.append(float(vertex.texture[i]) / float(coefficient))
+            vertex.texture = verticesDequantifieTextures
+
     def remapingInvVertices(self, minVertex, maxVertex):
         for vertex in self.vertices:
             vertexquantizePosition = []
@@ -202,6 +220,15 @@ class Decompression:
                     float(vertex.normal[i]) * (abs(float(minNormal[i])) + abs(float(maxNormal[i]))) - abs(
                         float(minNormal[i])))
             vertex.normal = vertexquantizeNormal
+
+    def remapingInvTextures(self, minTextures, maxTextures):
+        for vertex in self.vertices:
+            vertexquantizeTexture = []
+            for i in range(2):
+                vertexquantizeTexture.append(
+                    float(vertex.texture[i]) * (abs(float(minTextures[i])) + abs(float(maxTextures[i]))) - abs(
+                        float(minTextures[i])))
+            vertex.texture = vertexquantizeTexture
 
     def orderVerticeList(self):
         change = True
@@ -251,8 +278,18 @@ class Decompression:
         self.dequantificationNormals(quantification)
         self.remapingInvNormals(BBnMin, BBnMax)
 
-    def writeDecompressFile(self, filename):
-        Parser.writeMesh(self.vertices, self.triangles, filename)
+    def associateCorrectTexture(self, file, quantification, BBtMin, BBtMax):
+        for vertex in self.vertices:
+            command = file.readline()
+            texture = convertToListInt(command)
+            print(texture)
+            vertex.texture = texture
+
+        self.dequantificationTextures(quantification)
+        self.remapingInvTextures(BBtMin, BBtMax)
+
+    def writeDecompressFile(self, filename, precision):
+        Parser.writeMesh(self.vertices, self.triangles, filename, 5 )
 
     # def repairMesh(self):
     #     for triangle in self.triangles:
@@ -284,3 +321,18 @@ def decompressionMarkov(sourceFilename, destinationFilename):
     engine = Engine()
     engine.decompress(sourceFile, destinationFile)
     # engine.decompress(sys.stdin, sys.stdout)
+
+def precision_and_scale(x):
+    max_digits = 14
+    int_part = int(abs(x))
+    magnitude = 1 if int_part == 0 else int(math.log10(int_part)) + 1
+    if magnitude >= max_digits:
+        return (magnitude, 0)
+    frac_part = abs(x) - int_part
+    multiplier = 10 ** (max_digits - magnitude)
+    frac_digits = multiplier + int(multiplier * frac_part + 0.5)
+    while frac_digits % 10 == 0:
+        frac_digits /= 10
+    scale = int(math.log10(frac_digits))
+
+    return magnitude

@@ -26,7 +26,7 @@ def parseOBJ( filename ):
                 match = re.search( normalRegex, line)
                 normals.append([ float( match.groups()[0]), float( match.groups()[1]), float( match.groups()[2]) ])
 
-            elif line.startswith('vt '):
+            if line.startswith('vt '):
                 match = re.search( texCoordRegex, line )
                 textures.append([ float( match.groups()[0]), float( match.groups()[1])])
 
@@ -45,9 +45,10 @@ def parseOBJ( filename ):
                     faces.append([int(match.groups()[0])-1, int(match.groups()[3])-1, int(match.groups()[6])-1])
 
         for i in range(len(vertices)):
-            print(i, vertices[i], sortedNormals[i])
+            print(i, vertices[i], sortedNormals[i], sortedTextures[i])
 
-        return np.asarray(vertices), np.asarray(list(sortedNormals.values())), np.asarray(faces), np.asarray(sortedTextures)
+        # return np.asarray(vertices), np.asarray(list(sortedNormals.values())), np.asarray(faces), np.asarray(sortedTextures)
+        return np.asarray(sortedTextures)
 
 def computeFace( vertex, normals, textures, sortedNormals, sortedTextures, hasTexture = False ):
     if hasTexture:
