@@ -1,3 +1,5 @@
+import random
+
 from MeshData.Vertex import Vertex
 from Compression.ActiveList import ActiveList
 from Compression.markov import Engine
@@ -12,8 +14,8 @@ class Compression:
         self.filename = filename
 
     def getStartTriangle(self):
+        # return self.triangles[random.randint(0,(len(self.triangles)-1))]
         return self.triangles[0]
-
     def encodeConnectivity(self):
         traversalOrder = []
         startFace = self.getStartTriangle()
@@ -164,7 +166,6 @@ class Compression:
         maxNormal = [0, 0, 0]
 
         for vertex in self.vertices:
-            print(vertex.normal)
             for i in range(3):
                 if vertex.normal[i] < minNormal[i]:
                     minNormal[i] = vertex.normal[i]
@@ -309,21 +310,6 @@ class Compression:
         # Parser.writeMesh(quantifiedVertices, self.triangles, filenameMeshQuantify)
 
 
-
-# def compressWithHuffman(filenameMeshQuantify, filenameCompressHuffman):
-#     fileQuantifie = open(filenameMeshQuantify, 'r')
-#     text = fileQuantifie.read()
-#     textCompresser, dico = huffman.compresser(text)
-#     print("Avant : {} bits / Après : {} bits".format(len(text), len(textCompresser)))
-#     fileCompress = open(filenameCompressHuffman, "w")
-#     fileCompress.write(textCompresser)
-#     fileCompress.close()
-#     fileUncompress = open(filenameCompressHuffman, "r")
-#
-#
-# def uncompressWithHuffman(filenameCompressHuffman):
-#     fileUncompress = open(filenameCompressHuffman, "r")
-#     filenameUncompressHuffman = fileUncompress.read()
 
 
 # r = v + u - w

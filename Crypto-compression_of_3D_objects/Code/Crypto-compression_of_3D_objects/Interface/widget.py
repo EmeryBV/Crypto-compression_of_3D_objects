@@ -3,14 +3,11 @@ import copy
 import sys
 
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow,QFileDialog
+from PyQt5.QtWidgets import QApplication, QFileDialog
 
 from Interface.mainWindow import Ui_MainWindow
 from Parser import readMesh
-from Compression import Compression
-from Compression import Decompression
-from Evaluation import compressionEvaluation
-from main import create_compress_file
+from Compression import Compression, Decompression
 from random import randint
 import re
 ui = Ui_MainWindow()

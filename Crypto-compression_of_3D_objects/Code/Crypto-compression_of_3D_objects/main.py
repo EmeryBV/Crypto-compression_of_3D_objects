@@ -1,8 +1,6 @@
 from Parser import readMesh
-from Compression import Compression
-from Compression import Decompression
+from Compression import Compression, Decompression
 from Evaluation import compressionEvaluation
-from Encryption import encryption
 import copy
 
 def create_compress_file(filename):
@@ -17,7 +15,7 @@ if __name__ == '__main__':
     decompressedMesh = "results/DecompressedMesh2.obj"
     file = create_compress_file(compressedMesh)
     # file.write("test.obj")
-    meshFile = "./Mesh/OBJ/simpleSphere.obj"
+    meshFile = "./Mesh/OBJ/suzanne.obj"
     seed = 2563
     quantification = 1024
     vertices, faces = readMesh(meshFile)
@@ -31,7 +29,7 @@ if __name__ == '__main__':
 
     print("//////////////////////DECOMPRESSION//////////////////////")
     Decompression.decompressionMarkov(compressedMeshMarkov, decompressedMeshMarkov)
-    decompression = Decompression.Decompression(decompressedMeshMarkov, decompressedMesh,keyXOR, keyShuffling)
+    decompression = Decompression.Decompression(decompressedMeshMarkov, decompressedMesh, keyXOR, keyShuffling)
     decompression.decodeConnectivity()
 
     print("//////////////////////HAUSDORF//////////////////////")

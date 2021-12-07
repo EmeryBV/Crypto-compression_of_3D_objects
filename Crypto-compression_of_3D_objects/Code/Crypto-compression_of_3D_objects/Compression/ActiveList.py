@@ -181,7 +181,7 @@ class ActiveList:
     def removeFullVerticesValence(self):
         bool = False
         for vertex in self.vertexList[:]:
-            print(len( vertex.edges ))
+            # print(len( vertex.edges ))
             if vertex.isValenceFull():
                 bool = True
                 if vertex == self.focusVertex:

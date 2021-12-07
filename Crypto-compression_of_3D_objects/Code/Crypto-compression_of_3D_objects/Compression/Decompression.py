@@ -73,7 +73,7 @@ class Decompression:
                         command = file.readline()
 
                 elif "split" in command:
-                    print([o.index for o in AL.vertexList])
+                    # print([o.index for o in AL.vertexList])
 
                     ALBis, splitVertex = AL.splitDecompression(convertToInt(command))
                     print("Split vertex : ", str(splitVertex.index))
@@ -158,6 +158,7 @@ class Decompression:
         self.associateCorrectCoord(file, quantification, BBvMin, BBvMax)
         self.associateCorrectNormal(file, quantification, BBvMin, BBvMax)
 
+
     def getBoundingBoxVertices(self):
         minVertice = [10000, 10000, 10000]
         maxVertice = [0, 0, 0]
@@ -175,6 +176,7 @@ class Decompression:
             for i in range(3):
                 verticesDequantifiePosition.append(float(vertex.position[i]) / float(coefficient))
             vertex.position = verticesDequantifiePosition
+
 
     def dequantificationNormals(self, coefficient):
         for vertex in self.vertices:
@@ -199,7 +201,6 @@ class Decompression:
                 vertexquantizeNormal.append(
                     float(vertex.normal[i]) * (abs(float(minNormal[i])) + abs(float(maxNormal[i]))) - abs(
                         float(minNormal[i])))
-            # print(vertexquantizePosition)
             vertex.normal = vertexquantizeNormal
 
     def orderVerticeList(self):
@@ -218,9 +219,6 @@ class Decompression:
         traverselOrder = convertToListInt(command)
 
         for i in range(len(traverselOrder)):
-            # print(self.vertices[i].index)
-            # print(traverselOrder[i])
-            # print("\n")
             self.vertices[i].index = int(traverselOrder[i])
 
     def alreadyContainTriangle(self, triangleList):
