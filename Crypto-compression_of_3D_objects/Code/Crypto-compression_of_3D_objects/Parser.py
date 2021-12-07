@@ -47,7 +47,7 @@ def readMesh(file):
     meshTriangles = np.asarray(mesh.faces)
     meshNormals = np.asarray(mesh.vertex_normals)
     # print(mesh.metadata['vertex_texture'])
-
+    mesh.show()
     neighbors = sortNeighbors(mesh)
     vertices = []
     allEdges = {}

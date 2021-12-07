@@ -19,12 +19,13 @@ if __name__ == '__main__':
     # file.write("test.obj")
     meshFile = "/home/bourget-vecchio/Documents/Master_IMAGINA/M2/PROJET IMAGE/Crypto-compression_of_3D_objects/Code/Crypto-compression_of_3D_objects/Mesh/OBJ/simpleSphere.obj"
     seed = 2563
+    quantification = 1024
     vertices, faces = readMesh(meshFile)
     originalMesh = Compression.Compression(vertices, faces, compressedMesh)
     compression = copy.deepcopy(originalMesh)
 
     compression.encodeConnectivity()
-    keyXOR, keyShuffling = compression.encodeGeometry(seed,1024)
+    keyXOR, keyShuffling = compression.encodeGeometry(seed,quantification)
 
     Compression.compressionMarkov(compressedMesh, compressedMeshMarkov)
 

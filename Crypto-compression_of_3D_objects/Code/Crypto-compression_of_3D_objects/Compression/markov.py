@@ -215,7 +215,6 @@ class Engine():
             for prediction, weight in predictor.predict().items():
                 self.predictions[prediction][0] += weight * self.predictors[predictor]
                 self.predictions[prediction][1].append(predictor)
-
         return make_huffman_dict([TreeNode(v[0], k) for k, v in self.predictions.items()])
 
     def compress(self, stream_in, stream_out):
