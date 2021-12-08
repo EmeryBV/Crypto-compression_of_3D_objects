@@ -76,6 +76,7 @@ def readMesh(file):
     meshVertices = (np.asarray(mesh.vertices))
     meshTriangles = (np.asarray(mesh.triangles))
     meshNormals = (np.asarray(mesh.vertex_normals))
+
     meshTexture = (np.asarray(mesh.triangle_uvs))
     neighbors = dict()
     for triangle in meshTriangles:
@@ -108,7 +109,11 @@ def readMesh(file):
             else:
                 allEdges[(i, n)] = Edge([i, n])
                 edges.append(allEdges[(i, n)])
-        vertices.append(Vertex(i, meshVertices[i], neighbors[i], edges, normal=meshNormals[i], texture=meshTexture[i]))
+        if len(meshTexture) != 0 :
+            vertices.append(Vertex(i, meshVertices[i], neighbors[i], edges, normal=meshNormals[i], texture=meshTexture[i]))
+        else:
+            vertices.append(
+                Vertex(i, meshVertices[i], neighbors[i], edges, normal=meshNormals[i]))
 
     faces = []
     for i in range(0, len(meshTriangles)):

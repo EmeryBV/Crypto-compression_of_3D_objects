@@ -1,5 +1,5 @@
 import random
-
+import Parser
 from MeshData.Vertex import Vertex
 from Compression.ActiveList import ActiveList
 from Compression.markov import Engine
@@ -237,6 +237,8 @@ class Compression:
         self.writeTexture(quantifiedTexture)
         return keyXOR, keyShuffling
 
+    def writeCompressFile(self, filename, precision):
+        Parser.writeMesh(self.vertices, self.triangles, filename, 5 )
 
     def remapingVertices(self, minVertices, maxVertices):
         pointNormalize = (len(self.vertices)) * [None]
@@ -358,9 +360,6 @@ class Compression:
 
         file.close()
         return quantifiedVertices, quantifiedNormals, quantifiedTextures
-        # verticeDequantifie = self.dequantificationVertices(quantifiedVertices, precision)
-        # reconstructVertices = self.remapingInv(verticeDequantifie, minVertice, maxVertice)
-        # Parser.writeMesh(quantifiedVertices, self.triangles, filenameMeshQuantify)
 
 
 

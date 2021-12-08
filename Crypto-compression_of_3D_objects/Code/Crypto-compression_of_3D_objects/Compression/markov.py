@@ -245,7 +245,7 @@ class Engine():
             for predictor in self.predictors:
                 predictor.feed(to_encode)
 
-            #sys.stderr.write("{} bits encodés en {} bits.\n".format(len(to_encode)*8, len(huffman_dict[to_encode])))
+            # sys.stderr.write("{} bits encodés en {} bits.\n".format(len(to_encode)*8, len(huffman_dict[to_encode])))
 
         eof_sequence = self._huffman_dict()[-1]
         buffer_out += eof_sequence
