@@ -1,25 +1,35 @@
+import ast
+import json
+import sys
+
 import Parser
 from MeshData.Face import Face
 from MeshData.Vertex import Vertex
 from Compression.ActiveList import ActiveList
 import re
+from Compression.huffman import decompresser
 import math
-from Compression.markov import Engine
+# from Compression.markov import Engine
 from Encryption import encryption
+
 listPrediction = []
+from bitstring import BitArray
 
 
 class Decompression:
 
-    def __init__(self, filenameIN, filenameOut,keyXOR, keyShufffling):
+    def __init__(self, filenameIN, filenameOut, keyXOR, keyShufffling, vertices=None, triangles=None,):
+        if triangles is None:
+            triangles = []
+        if vertices is None:
+            vertices = []
         self.stack = []
-        self.vertices = []
-        self.triangles = []
+        self.vertices = vertices
+        self.triangles = triangles
         self.filenameIN = filenameIN
         self.filenameOut = filenameOut
         self.keyXOR = keyXOR
         self.keyShuffling = keyShufffling
-
 
     def initFirstTriangle(self, v1, v2, v3):
 
@@ -30,6 +40,8 @@ class Decompression:
         v2.addEdge([v3])
 
     def decodeConnectivity(self):
+        global listPrediction
+        listPrediction = []
         file = open(self.filenameIN, 'r')
         v1 = file.readline()
         v2 = file.readline()
@@ -55,7 +67,7 @@ class Decompression:
 
                 print("command ", i + 1, " ", command)
                 print("FOCUS VERTEX = ", AL.focusVertex.index, AL.focusVertex.valence, len(AL.focusVertex.edges))
-                if "add" in command:
+                if "add" in command or int(command)!=None:
                     print("AJOUT DE " + str(i))
                     print("ACTIVE LIST", [n.index for n in AL.vertexList])
 
@@ -78,7 +90,8 @@ class Decompression:
 
                     ALBis, splitVertex = AL.splitDecompression(convertToInt(command))
                     print("Split vertex : ", str(splitVertex.index))
-                    AL.makeConnectivity(AL.focusVertex, splitVertex, append = False )  # connect previous focus with splitvertex
+                    AL.makeConnectivity(AL.focusVertex, splitVertex,
+                                        append=False)  # connect previous focus with splitvertex
                     listPrediction.append([AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1],
                                            AL.vertexList[len(AL.vertexList) - 2]])
 
@@ -90,7 +103,7 @@ class Decompression:
 
                     self.stack.append(ALBis)
                     for l in self.stack:
-                        print( "AL in stack : ",  [ v.index for v in l.vertexList] )
+                        print("AL in stack : ", [v.index for v in l.vertexList])
 
                     if "order" not in command:
                         command = file.readline()
@@ -113,10 +126,10 @@ class Decompression:
             self.associateCorrectIndex(command)
 
         precision = self.decodeGeometry(file)
-        print("precision " , precision)
+
         self.orderVerticeList()
         self.makeTriangle()
-        self.writeDecompressFile(self.filenameOut,precision)
+        self.writeDecompressFile(self.filenameOut, precision)
 
     def makeTriangle(self):
         for vertex in self.vertices:
@@ -129,9 +142,9 @@ class Decompression:
                         if not self.alreadyContainTriangle(triangle):
                             self.triangles.append(Face(triangle))
 
-
     def decryption(self):
-        decryption  =encryption.Encrypton (self.vertices)
+        decryption = encryption.Encrypton(self.vertices)
+
         decryption.shufflingDecryption(self.keyShuffling)
         decryption.decodingXOR(self.keyXOR)
 
@@ -164,11 +177,56 @@ class Decompression:
         quantification = convertToInt(command)
         print("quantification " + str(quantification))
 
-        self.associateCorrectCoord(file, quantification, BBvMin, BBvMax)
-        self.associateCorrectNormal(file, quantification, BBvMin, BBvMax)
-        self.associateCorrectTexture(file, quantification, BBtMin, BBtMax)
+        command = file.readline()
+        if "v" in command:
+            self.associateCorrectCoord(file, quantification, BBvMin, BBvMax)
+        command = file.readline()
+        if "n" in command:
+            self.associateCorrectNormal(file, quantification, BBvMin, BBvMax)
+        command = file.readline()
+        if "t" in command:
+            self.associateCorrectTexture(file, quantification, BBtMin, BBtMax)
 
         return precision_and_scale(float(BBnMin[0]))
+
+    def decodeGeometryNotSinceConnectivity(self):
+
+        haveTexture = False
+        minTexture = []
+        maxTexture = []
+        f1 = open(self.filenameIN, "r")
+        listLine = f1.readlines()
+        if len(convertToListInt(listLine[-7])) == 1:
+            maxTexture = convertToListInt(listLine[-1])
+            minTexture = convertToListInt(listLine[-2])
+            maxNormal = convertToListInt(listLine[-3])
+            minNormal = convertToListInt(listLine[-4])
+            maxVertices = convertToListInt(listLine[-5])
+            minVertices = convertToListInt(listLine[-6])
+            quantification = convertToInt(listLine[-7])
+            haveTexture = True
+
+        else :
+            maxNormal = convertToListInt(listLine[-1])
+            minNormal = convertToListInt(listLine[-2])
+            maxVertices = convertToListInt(listLine[-3])
+            minVertices = convertToListInt(listLine[-4])
+            quantification = convertToInt(listLine[-5])
+        f1.close()
+
+        self.decryption()
+        # self.writeDecompressFile("test.obj",10)
+        self.dequantificationVertices(quantification)
+        self.dequantificationNormals(quantification)
+        if haveTexture:
+            self.dequantificationTextures(quantification)
+
+        self.remapingInvVertices(minVertices,maxVertices)
+        self.remapingInvNormals(minNormal,maxNormal)
+        if haveTexture:
+            self.remapingInvTextures(minTexture,maxTexture)
+
+        self.writeDecompressFile(self.filenameOut,0)
 
     def getBoundingBoxVertices(self):
         minVertice = [10000, 10000, 10000]
@@ -187,7 +245,6 @@ class Decompression:
             for i in range(3):
                 verticesDequantifiePosition.append(float(vertex.position[i]) / float(coefficient))
             vertex.position = verticesDequantifiePosition
-
 
     def dequantificationNormals(self, coefficient):
         for vertex in self.vertices:
@@ -282,14 +339,13 @@ class Decompression:
         for vertex in self.vertices:
             command = file.readline()
             texture = convertToListInt(command)
-            print(texture)
             vertex.texture = texture
 
         self.dequantificationTextures(quantification)
         self.remapingInvTextures(BBtMin, BBtMax)
 
     def writeDecompressFile(self, filename, precision):
-        Parser.writeMesh(self.vertices, self.triangles, filename, 5 )
+        Parser.writeMesh(self.vertices, self.triangles, filename, 5)
 
     # def repairMesh(self):
     #     for triangle in self.triangles:
@@ -315,12 +371,16 @@ def findVertexWithprediction(listPrediction, prediction):
             (int(focus.position[i]) + int(last.position[i]) - int(beforeLast.position[i]) + int(prediction[i])))
     return rPosition
 
-def decompressionMarkov(sourceFilename, destinationFilename):
-    sourceFile = open(sourceFilename, 'rb')
-    destinationFile = open(destinationFilename, 'wb')
-    engine = Engine()
-    engine.decompress(sourceFile, destinationFile)
+
+def decompressionHuffman(sourceFilename, destinationFilename):
+    data, tree = parserCompressionHuffman(sourceFilename)
+    decompressData = decompresser(data, tree)
+    file = open(destinationFilename, 'w')
+    file.write(decompressData)
+    # engine = Engine()
+    # engine.decompress(sourceFile, destinationFile)
     # engine.decompress(sys.stdin, sys.stdout)
+
 
 def precision_and_scale(x):
     max_digits = 14
@@ -336,3 +396,54 @@ def precision_and_scale(x):
     scale = int(math.log10(frac_digits))
 
     return magnitude
+
+
+def parserCompressionHuffman(filename):
+    file = open(filename, 'rb+')
+    byte_array_tree = bytearray()
+    byte = bytes
+    while byte := file.read(1):
+        if '$' in str(byte):
+            break
+        byte_array_tree.append(int.from_bytes(byte, byteorder=sys.byteorder))
+
+    file.read(1)
+    lenghtData = ""
+    while byte := file.read(1):
+        if '$' in str(byte):
+            break
+        lenghtData += byte.decode()
+
+    file.read(1)
+
+    nbrOctet = int(int(lenghtData) / 8)
+    reste = int(int(lenghtData) % 8)
+    byte_array_data = bytearray()
+    # f.readlines().decode('UTF-8')
+    while byte := file.read(1):
+        byte_array_data.append(int.from_bytes(byte, byteorder=sys.byteorder))
+    data = ""
+    for i in range(len(byte_array_data)):
+        if i != nbrOctet :
+            data += str(bin(byte_array_data[i])[2:].zfill(8))
+        else:
+            data += str(bin(byte_array_data[i])[2:].zfill(reste))
+
+    tree = byte_array_tree.decode()[1:-2].replace('\'', '')
+
+    tree = re.split("[,:]+", tree)
+    for i in range(len(tree)):
+        if tree[i] =='  ' and len(tree[i]) == 2  or tree[i] ==' ' and len(tree[i]) == 1 :  # space case
+            tree[i] = " "
+        else:
+            tree[i] = tree[i].replace(' ', "").replace("\\n", "\n")
+
+    treeDico = convert(tree)
+    return data, treeDico
+
+
+def convert(lst):
+    res_dct = {}
+    for i in range(0, len(lst) - 1, 2):
+        res_dct[str(lst[i])] = lst[i + 1]
+    return res_dct

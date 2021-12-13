@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>437</width>
-    <height>767</height>
+    <width>541</width>
+    <height>749</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <rect>
       <x>0</x>
       <y>6</y>
-      <width>431</width>
+      <width>531</width>
       <height>21</height>
      </rect>
     </property>
@@ -35,12 +35,12 @@
      <rect>
       <x>0</x>
       <y>50</y>
-      <width>431</width>
+      <width>531</width>
       <height>701</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -76,7 +76,7 @@
        <rect>
         <x>0</x>
         <y>30</y>
-        <width>431</width>
+        <width>521</width>
         <height>80</height>
        </rect>
       </property>
@@ -110,97 +110,11 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="verticalLayoutWidget">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>110</y>
-        <width>160</width>
-        <height>61</height>
-       </rect>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <item>
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>Quantification</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="quantification">
-         <property name="editable">
-          <bool>false</bool>
-         </property>
-         <item>
-          <property name="text">
-           <string>2048 ( 12 bits )</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>1024 ( 11 bits )</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>512 ( 10 bits )</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>256 ( 9 bits )</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>128 ( 8 bits )</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>64  ( 7 bits )</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>32 ( 6 bits )</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>16 ( 5 bits )</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>8 ( 4 bits )</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>4 (3 bits )</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>3 (2 bits )</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>2 (1 bits )</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
-     </widget>
      <widget class="QLabel" name="label_7">
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>220</y>
+        <y>240</y>
         <width>201</width>
         <height>31</height>
        </rect>
@@ -218,11 +132,11 @@
        <bool>false</bool>
       </property>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>250</y>
+        <y>270</y>
         <width>211</width>
         <height>61</height>
        </rect>
@@ -254,9 +168,9 @@
      <widget class="QPushButton" name="execute">
       <property name="geometry">
        <rect>
-        <x>70</x>
+        <x>0</x>
         <y>620</y>
-        <width>281</width>
+        <width>531</width>
         <height>23</height>
        </rect>
       </property>
@@ -271,7 +185,7 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>420</y>
+        <y>430</y>
         <width>91</width>
         <height>41</height>
        </rect>
@@ -280,12 +194,12 @@
        <string>Key shuffling </string>
       </property>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>460</y>
-        <width>415</width>
+        <width>521</width>
         <height>48</height>
        </rect>
       </property>
@@ -294,6 +208,9 @@
         <widget class="QLineEdit" name="shufflingKey">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="maxLength">
+          <number>1000000000</number>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -328,12 +245,12 @@
        <string>Key XOR</string>
       </property>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>560</y>
-        <width>413</width>
+        <width>521</width>
         <height>41</height>
        </rect>
       </property>
@@ -342,6 +259,9 @@
         <widget class="QLineEdit" name="XORKey">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="maxLength">
+          <number>1000000000</number>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -364,8 +284,8 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>180</y>
-        <width>421</width>
+        <y>200</y>
+        <width>521</width>
         <height>20</height>
        </rect>
       </property>
@@ -377,8 +297,8 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>330</y>
-        <width>421</width>
+        <y>340</y>
+        <width>521</width>
         <height>20</height>
        </rect>
       </property>
@@ -386,25 +306,161 @@
        <enum>Qt::Horizontal</enum>
       </property>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="horizontalLayoutWidget">
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>360</y>
-        <width>417</width>
+        <y>120</y>
+        <width>521</width>
         <height>61</height>
        </rect>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Quantification</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="quantification">
+           <property name="editable">
+            <bool>false</bool>
+           </property>
+           <item>
+            <property name="text">
+             <string>2048 ( 12 bits )</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1024 ( 11 bits )</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>512 ( 10 bits )</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>256 ( 9 bits )</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>128 ( 8 bits )</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>64  ( 7 bits )</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>32 ( 6 bits )</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>16 ( 5 bits )</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>8 ( 4 bits )</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>4 (3 bits )</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>3 (2 bits )</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2 (1 bits )</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>Mode:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="encodeMode">
+           <item>
+            <property name="text">
+             <string>Encode geometry</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Encode connectivity + geometry</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="verticalLayoutWidget_6">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>370</y>
+        <width>521</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_9">
        <item>
         <widget class="QLabel" name="label_4">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>50</height>
+          </size>
+         </property>
          <property name="text">
-          <string>Filename compress OBJ</string>
+          <string>Location of the compress file</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="filepathDestination"/>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QLineEdit" name="filepathDestination">
+           <property name="maxLength">
+            <number>100000000</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="browseDestinationFile">
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
@@ -416,9 +472,9 @@
      <widget class="QPushButton" name="execute2">
       <property name="geometry">
        <rect>
-        <x>70</x>
+        <x>0</x>
         <y>620</y>
-        <width>281</width>
+        <width>531</width>
         <height>23</height>
        </rect>
       </property>
@@ -430,8 +486,8 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>240</y>
-        <width>413</width>
+        <y>380</y>
+        <width>521</width>
         <height>41</height>
        </rect>
       </property>
@@ -441,8 +497,18 @@
          <property name="enabled">
           <bool>true</bool>
          </property>
+         <property name="maxLength">
+          <number>1000000000</number>
+         </property>
          <property name="readOnly">
           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_2">
+         <property name="text">
+          <string>Paste</string>
          </property>
         </widget>
        </item>
@@ -452,8 +518,8 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>300</y>
-        <width>421</width>
+        <y>440</y>
+        <width>531</width>
         <height>20</height>
        </rect>
       </property>
@@ -468,7 +534,7 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>210</y>
+        <y>350</y>
         <width>61</width>
         <height>31</height>
        </rect>
@@ -481,8 +547,8 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>160</y>
-        <width>415</width>
+        <y>300</y>
+        <width>521</width>
         <height>48</height>
        </rect>
       </property>
@@ -492,8 +558,18 @@
          <property name="enabled">
           <bool>true</bool>
          </property>
+         <property name="maxLength">
+          <number>1000000000</number>
+         </property>
          <property name="readOnly">
           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton">
+         <property name="text">
+          <string>Paste</string>
          </property>
         </widget>
        </item>
@@ -504,11 +580,30 @@
        <rect>
         <x>0</x>
         <y>10</y>
-        <width>431</width>
+        <width>521</width>
         <height>81</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_8">
+       <item>
+        <widget class="QLabel" name="label_16">
+         <property name="maximumSize">
+          <size>
+           <width>300</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">font: 14pt &quot;RaghuMalayalamSans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>DECOMPRESSION</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::AutoText</enum>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QLabel" name="label_3">
          <property name="maximumSize">
@@ -545,7 +640,7 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>130</y>
+        <y>270</y>
         <width>91</width>
         <height>41</height>
        </rect>
@@ -558,8 +653,8 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>110</y>
-        <width>421</width>
+        <y>190</y>
+        <width>531</width>
         <height>20</height>
        </rect>
       </property>
@@ -567,25 +662,100 @@
        <enum>Qt::Horizontal</enum>
       </property>
      </widget>
-     <widget class="QWidget" name="layoutWidget">
+     <widget class="QWidget" name="verticalLayoutWidget_5">
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>350</y>
-        <width>417</width>
-        <height>61</height>
+        <y>90</y>
+        <width>244</width>
+        <height>70</height>
        </rect>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <layout class="QVBoxLayout" name="verticalLayout_7">
        <item>
-        <widget class="QLabel" name="label_9">
+        <widget class="QLabel" name="label_15">
          <property name="text">
-          <string>Filename compress OBJ</string>
+          <string>Mode:</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="filepathDestination2"/>
+        <widget class="QComboBox" name="decodeMode">
+         <item>
+          <property name="text">
+           <string>Decode geometry</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Decode connectivity + geometry</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QLabel" name="label_17">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>240</y>
+        <width>300</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>300</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font: 14pt &quot;RaghuMalayalamSans&quot;;</string>
+      </property>
+      <property name="text">
+       <string>DECRYPTION</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+     </widget>
+     <widget class="QWidget" name="verticalLayoutWidget_7">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>460</y>
+        <width>521</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_10">
+       <item>
+        <widget class="QLabel" name="label_18">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Location of the decompress file</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <item>
+          <widget class="QLineEdit" name="filepathDestination_2"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="browseDestinationFile_2">
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>

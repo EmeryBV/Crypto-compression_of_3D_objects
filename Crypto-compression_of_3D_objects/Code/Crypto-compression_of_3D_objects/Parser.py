@@ -67,17 +67,38 @@ def sortNeighbors2(vertices, normals, neighbors):
 
     return final
 
+def readMeshBis(file):
+    vertices, normal , faces,texture = objParser.parseOBJ(file)
 
-def readMesh(file):
+    listVertices=[]
+    for idx in range(len(vertices)):
+        if texture is not None :
+            newVertex = Vertex(idx,vertices[idx], [] , normal = normal[idx], texture = texture[idx])
+        else :
+            newVertex = Vertex(idx, vertices[idx], [], normal=normal[idx])
+        listVertices.append(newVertex)
+    listFace = []
+
+
+    for idx in range(len(faces)):
+        listVerticesFace = []
+        for idx2 in range(0,3):
+            listVerticesFace.append(listVertices[faces[idx][idx2]])
+        listFace.append(Face(listVerticesFace))
+
+    return listVertices, listFace
+
+def readMesh(file, mode= 0):
     mesh = o3d.io.read_triangle_mesh(file)
+
     mesh.remove_duplicated_vertices()
     mesh.compute_vertex_normals()
 
     meshVertices = (np.asarray(mesh.vertices))
     meshTriangles = (np.asarray(mesh.triangles))
     meshNormals = (np.asarray(mesh.vertex_normals))
-
     meshTexture = (np.asarray(mesh.triangle_uvs))
+
     neighbors = dict()
     for triangle in meshTriangles:
         v0 = triangle[0]
@@ -164,17 +185,21 @@ def writeMesh(listVertice, faces, filename, precision):
 
         listIndex.append(listListIndex)
     indexTriangle = open3d.utility.Vector3iVector(listIndex)
-
     mesh = trimesh.Trimesh(listPosition, listIndex, process=False, vertex_normals=listNormal, maintain_order=True)
 
-    trimesh.repair.fix_inversion(mesh,True)
-    trimesh.repair.fix_winding(mesh)
+    if listTexture[0] is not None:
+        trimesh.repair.fix_winding(mesh)
+        trimesh.repair.fix_inversion(mesh, True)
+        mesh.visual = trimesh.visual.texture.TextureVisuals(listTexture)
+        mesh.vertex_normals = listNormal
+        trimesh.repair.fix_winding(mesh)
+        trimesh.repair.fix_inversion(mesh, True)
+        meshText = trimesh.exchange.obj.export_obj(mesh, include_normals=True, include_texture=True, digits=precision)
+    else:
 
-    mesh.visual = trimesh.visual.texture.TextureVisuals(listTexture)
-    mesh.vertex_normals = listNormal
-    trimesh.repair.fix_winding(mesh)
-    trimesh.repair.fix_inversion(mesh, True)
-    meshText = trimesh.exchange.obj.export_obj(mesh, include_normals=True, include_texture=True, digits=precision)
+        trimesh.repair.fix_winding(mesh)
+        trimesh.repair.fix_inversion(mesh, True)
+        meshText = trimesh.exchange.obj.export_obj(mesh, include_normals=True, digits=precision)
 
     file = open(filename, "w")
     file.write(meshText)

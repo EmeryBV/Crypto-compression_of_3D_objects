@@ -1,11 +1,14 @@
 import random
 import Parser
+from Evaluation import compressionEvaluation
 from MeshData.Vertex import Vertex
 from Compression.ActiveList import ActiveList
-from Compression.markov import Engine
+from Compression.huffman import compresser,decompresser
 from Encryption import encryption
 import copy
+from bitstring import BitArray
 listPrediction = []
+predIsAdd = True
 class Compression:
     def __init__(self, vertices, faces, filename):
         self.stack = []
@@ -13,11 +16,16 @@ class Compression:
         self.triangles = faces
         self.filename = filename
 
+
     def getStartTriangle(self):
         # return self.triangles[random.randint(0,(len(self.triangles)-1))]
         return self.triangles[0]
+
     def encodeConnectivity(self):
+        global listPrediction
+        listPrediction = []
         traversalOrder = []
+
         startFace = self.getStartTriangle()
         startVertices = startFace.vertices
 
@@ -109,30 +117,41 @@ class Compression:
         print(traversalOrder)
         line = ""
         for index in traversalOrder:
-            line += "".join(str(index)) + " "
+            line += " " + str(index)
         file = open(self.filename, "a")
-        file.write("order " + line + "\n")
+        file.write("order" + line + "\n")
         file.close()
 
-    def writeNormal(self, listQuantifiedNormals):
-        file = open(self.filename, "a")
 
-        for vertex in listQuantifiedNormals:
-            line = ""
-            for i in range(0, 3):
-                line += "".join(str(vertex.normal[i])) + " "
-            file.write("n " + line + "\n")
+    def writeVertex(self, ):
+        file = open(self.filename, "a")
+        file.write("\n")
+        file.write("v")
+        for vertex in self.vertices:
+            file.write("\n")
+            file.write(str(int(vertex.position[0])) + " " + str(int(vertex.position[1])) + " " + str(
+                int(vertex.position[2])))
+        file.close()
+
+
+    def writeNormal(self):
+        file = open(self.filename, "a")
+        file.write("\n")
+        file.write("n")
+        for vertex in self.vertices:
+            file.write("\n")
+            file.write(str(int(vertex.normal[0])) + " " + str(int(vertex.normal[1])) + " " + str(
+                int(vertex.normal[2])))
 
         file.close()
 
-    def writeTexture(self, listQuantifiedTextures):
+    def writeTexture(self):
         file = open(self.filename, "a")
-        for vertex in listQuantifiedTextures:
-            line = ""
-            for i in range(0, 2):
-
-                line += "".join(str(vertex.texture[i])) + " "
-            file.write("t " + line + "\n")
+        file.write("\n")
+        file.write("t")
+        for vertex in self.vertices:
+            file.write("\n")
+            file.write(str(int(vertex.texture[0])) + " " + str(int(vertex.texture[1])))
         file.close()
 
     def encodeFace(self, v1, v2, v3):
@@ -144,12 +163,17 @@ class Compression:
                 edge.encode()
 
     def encodeVertexInFile(self, instruction, vertex, valence=None, offset=None, index=None):
+        global predIsAdd
         file = open(self.filename, "a")
         if instruction == "add":
             vertex.encode()
-            line = " ".join([instruction, str(valence)])
+            if predIsAdd:
+                line = " ".join([ str(valence)])
+            else : line = " ".join([instruction, str(valence)])
+            predIsAdd = True
         elif instruction == "split":
             line = " ".join([instruction, str(offset)])
+            predIsAdd = False
         else:
             line = " ".join([str(vertex.index), instruction, str(index), str(offset)])
 
@@ -200,12 +224,22 @@ class Compression:
                 return face
         print( "No face found between" ,v1.index, v2.index, v3.index)
 
-    def encodeGeometry(self, seed,quantification):
-        keyXOR = None
-        keyShuffling = None
+    def encodeGeometrySinceConnectivity(self, seed, quantification):
+        keyXOR = []
+        keyShuffling = []
+        global listPrediction
         file = open(self.filename, "a")
-        quantifiedVertices, quantifiedNormals, quantifiedTexture = self.quantification(quantification)
-        file.write("q " + str(quantification) + "\n")
+        minVertices, maxVertices, minNormals,maxNormals, minTextures, maxTextures=self.quantification(quantification)
+        file.write( "[" + str(minVertices[0])+";" + str(minVertices[1]) + ";" + str(minVertices[2])+"]\n")
+        file.write( "[" + str(maxVertices[0])+";" + str(maxVertices[1]) + ";" + str(maxVertices[2])+"]\n")
+
+        file.write("[" + str(minNormals[0]) + ";" + str(minNormals[1]) + ";" + str(minNormals[2]) + "]\n")
+        file.write("[" + str(maxNormals[0]) + ";" + str(maxNormals[1]) + ";" + str(maxNormals[2]) + "]\n")
+
+        file.write( "[" + str(minTextures[0])+";" + str(minTextures[1]) +"]\n")
+        file.write( "[" + str(maxTextures[0])+";" + str(maxTextures[1]) +"]\n")
+
+        file.write("q " + str(quantification))
 
         listPredictionPosition = []
         for listVertex in listPrediction:
@@ -216,29 +250,64 @@ class Compression:
             listPredictionPosition.append(list)
 
         listEncrypt = []
-        listEncrypt.append(copy.deepcopy(self.vertices[0].position))
-        listEncrypt.append(copy.deepcopy(self.vertices[1].position))
-        listEncrypt.append(copy.deepcopy(self.vertices[2].position))
+        listEncrypt.append(self.vertices[0].position)
+        listEncrypt.append(self.vertices[1].position)
+        listEncrypt.append(self.vertices[2].position)
         listEncrypt.extend(listPredictionPosition)
 
-        EncryptionVertices =encryption.Encrypton (listEncrypt)
+        for idx in range(len(listEncrypt)):
+            self.vertices[idx].position = listEncrypt[idx]
+
+        EncryptionVertices =encryption.Encrypton (self.vertices)
         keyXOR = EncryptionVertices.encodingXOR(seed,quantification)
         keyShuffling = EncryptionVertices.shufflingEncryption(seed)
 
-        for predictionPosition in listEncrypt:
-            file.write("v ")
-            for i in range(3):
-                file.write(str(int(predictionPosition[i])) + " ")
-            file.write("\n")
         file.close()
+        self.writeVertex()
+        self.writeNormal()
+        self.writeTexture()
+        listPrediction = []
+        return keyXOR, keyShuffling
+
+    def encodeGeometryWithoutConnectivity(self, seed, quantification, compressFilename):
+        keyXOR = None
+        keyShuffling = None
+        minVertices, maxVertices, minNormals,maxNormals, minTextures, maxTextures = self.quantification(quantification)
+        copyVerticesQuantified = copy.deepcopy(self.vertices)
+
+        EncryptionVertices =encryption.Encrypton (self.vertices)
+        keyXOR = EncryptionVertices.encodingXOR(seed,quantification)
+        keyShuffling = EncryptionVertices.shufflingEncryption(seed)
 
 
-        self.writeNormal(quantifiedNormals)
-        self.writeTexture(quantifiedTexture)
+        copyVerticesQuantifiedEncrypt = copy.deepcopy(self.vertices)
+
+        hausdorffDistanceEncryption =  compressionEvaluation.HausdorffDistance(copyVerticesQuantified, copyVerticesQuantifiedEncrypt)
+        print("HAUSDORFF distance Encrypt: " + str(hausdorffDistanceEncryption))
+
+        self.writeCompressFile(compressFilename,0)
+
+        fileOut = open(compressFilename, 'a')
+        fileOut.write("\n# "+str(quantification)+"\n")
+        fileOut.write("# [" + str(minVertices[0]) + ";" + str(minVertices[1]) + ";" + str(minVertices[2]) + "]\n")
+        fileOut.write("# [" + str(maxVertices[0]) + ";" + str(maxVertices[1]) + ";" + str(maxVertices[2]) + "]\n")
+
+        fileOut.write("# [" + str(minNormals[0]) + ";" + str(minNormals[1]) + ";" + str(minNormals[2]) + "]\n")
+        fileOut.write("# [" + str(maxNormals[0]) + ";" + str(maxNormals[1]) + ";" + str(maxNormals[2]) + "]\n")
+
+        if(minTextures):
+            fileOut.write("# [" + str(minTextures[0]) + ";" + str(minTextures[1]) + ";" + str(minTextures[2]) + "]\n")
+            fileOut.write("# [" + str(maxTextures[0]) + ";" + str(maxTextures[1]) + ";" + str(maxTextures[2]) + "]\n")
+        fileOut.close()
+
+        with open(compressFilename, 'r') as fin:
+            data = fin.read().splitlines(True)
+        with open(compressFilename, 'w') as fout:
+            fout.writelines(data[1:])
         return keyXOR, keyShuffling
 
     def writeCompressFile(self, filename, precision):
-        Parser.writeMesh(self.vertices, self.triangles, filename, 5 )
+        Parser.writeMesh(self.vertices, self.triangles, filename, precision )
 
     def remapingVertices(self, minVertices, maxVertices):
         pointNormalize = (len(self.vertices)) * [None]
@@ -276,7 +345,7 @@ class Compression:
     def remapingTextures(self, minTexture, maxTexture):
         pointNormalize = (len(self.vertices)) * [None]
         sumExtremum = []
-        for i in range(3):
+        for i in range(2):
             sumExtremum.append(abs(minTexture[i]) + abs(maxTexture[i]))
         l = 0
         for vertex in self.vertices:
@@ -291,78 +360,48 @@ class Compression:
         return pointNormalize
 
     def quantifyVertices(self, pointNormalize, coefficient):
-        quantifiedVertices = len(pointNormalize) * [None]
-        l = 0
         for vertex in pointNormalize:
             verticesQuantifiePosition = []
             for i in range(3):
                 verticesQuantifiePosition.append(round(vertex.position[i] * coefficient))
-
-            vertexQuantifie = Vertex(vertex.index, verticesQuantifiePosition.copy(), vertex.neighbors)
             self.vertices[vertex.index].position = verticesQuantifiePosition.copy()
-            quantifiedVertices[l] = vertexQuantifie
-            l += 1
-        return quantifiedVertices
+
 
     def quantifyNormals(self, pointNormalizeNormals, coefficient):
-        quantifiedNormals = len(pointNormalizeNormals) * [None]
-        l = 0
         for vertex in pointNormalizeNormals:
             verticesQuantifieNormals = []
             for i in range(3):
-                # print(vertex.normal)
                 verticesQuantifieNormals.append(round(vertex.normal[i] * coefficient))
-            normalsQuantifie = Vertex(vertex.index, vertex.position, vertex.neighbors,
-                                      normal=verticesQuantifieNormals.copy())
-            quantifiedNormals[l] = normalsQuantifie
-            l += 1
-        return quantifiedNormals
+            self.vertices[vertex.index].normal = verticesQuantifieNormals.copy()
 
     def quantifyTextures(self, pointNormalizeTextures, coefficient):
-        quantifiedTextures = len(pointNormalizeTextures) * [None]
-        l = 0
         for vertex in pointNormalizeTextures:
             verticesQuantifieTextures = []
             for i in range(2):
-                # print(vertex.normal)
                 verticesQuantifieTextures.append(round(vertex.texture[i] * coefficient))
-            texturesQuantifie = Vertex(vertex.index, vertex.position, vertex.neighbors,
-                                      normal=vertex.normal, texture= verticesQuantifieTextures.copy())
-            quantifiedTextures[l] = texturesQuantifie
-            l += 1
-        print([n.texture for n in quantifiedTextures])
-        return quantifiedTextures
+            self.vertices[vertex.index].texture= verticesQuantifieTextures.copy()
+
 
     def quantification(self,precision):
         #VERTICES
         minVertices, maxVertices = self.getBoundingBoxVertices()
-        file = open(self.filename, "a")
-        file.write("BBvMin" + str(minVertices) + "\n")
-        file.write("BBvMax" + str(maxVertices) + "\n")
         normalizePointVertices = self.remapingVertices(minVertices, maxVertices)
-        quantifiedVertices = self.quantifyVertices(normalizePointVertices, precision)
+        self.quantifyVertices(normalizePointVertices, precision)
 
         #NORMALS
         minNormals, maxNormals = self.getBoundingBoxNormals()
-        file.write("BBnMin" + str(minNormals) + "\n")
-        file.write("BBnMax" + str(maxNormals) + "\n")
         normalizePointNormals = self.remapingNormals(minNormals, maxNormals)
-        quantifiedNormals = self.quantifyNormals(normalizePointNormals, precision)
+        self.quantifyNormals(normalizePointNormals, precision)
 
         #TEXTURES
-        minTextures, maxTextures = self.getBoundingBoxTextures()
-        file.write("BBtMin" + str(minTextures) + "\n")
-        file.write("BBtMax" + str(maxTextures) + "\n")
-        normalizePointTextures = self.remapingTextures(minTextures, maxTextures)
-        quantifiedTextures= self.quantifyTextures(normalizePointTextures, precision)
+        minTextures = []
+        maxTextures = []
+        if self.vertices[0].texture is not None:
+            minTextures, maxTextures = self.getBoundingBoxTextures()
+            normalizePointTextures = self.remapingTextures(minTextures, maxTextures)
+            self.quantifyTextures(normalizePointTextures, precision)
 
-
-
-        file.close()
-        return quantifiedVertices, quantifiedNormals, quantifiedTextures
-
-
-
+        return minVertices,maxVertices, minNormals,maxNormals,minTextures,maxTextures
 
 # r = v + u - w
 def prediction(vPosition, uPosition, wPosition):
@@ -371,8 +410,27 @@ def prediction(vPosition, uPosition, wPosition):
         rPosition.append(vPosition[i] + uPosition[i] - wPosition[i])
     return rPosition
 
-def compressionMarkov(sourceFilename, destinationFilename):
-    sourceFile = open(sourceFilename, 'rb')
-    destinationFile = open(destinationFilename, 'wb')
-    engine = Engine()
-    engine.compress(sourceFile, destinationFile)
+def compressionHuffman(sourceFilename, destinationFilename):
+    sourceFile = open(sourceFilename, 'r')
+    data = sourceFile.read()
+    compressData, tree = compresser(data)
+    # print(decompresser(compressData,tree))
+    # for i in range(len(compressData)):
+    #     print(compressData[i])
+    print("Avant : {} bits / Après : {} bits".format(len(data) * 8, len(compressData)))
+
+    destinationFile = open(destinationFilename, 'wb+')
+
+    dico = str(tree) + "\n$\n"
+    destinationFile.write(dico.encode())
+    byte_array  = convertStrToByte(compressData)
+    destinationFile.write(str(len(compressData)).encode() + b"$\n"+byte_array)
+    destinationFile.close()
+    # engine.compress(sourceFile, destinationFile)
+
+def convertStrToByte(string):
+    byte_array = bytearray()
+
+    for i in range(0, len(string), 8):
+        byte_array.append(int(string[i:i + 8], 2))
+    return byte_array

@@ -44,11 +44,11 @@ def parseOBJ( filename ):
                     computeFace(match.groups()[6:9], normals, textures, sortedNormals, sortedTextures, hasTexture = True)
                     faces.append([int(match.groups()[0])-1, int(match.groups()[3])-1, int(match.groups()[6])-1])
 
-        for i in range(len(vertices)):
-            print(i, vertices[i], sortedNormals[i], sortedTextures[i])
+        # for i in range(len(vertices)):
+        #     print(i, vertices[i], sortedNormals[i], sortedTextures[i])
 
-        # return np.asarray(vertices), np.asarray(list(sortedNormals.values())), np.asarray(faces), np.asarray(sortedTextures)
-        return np.asarray(sortedTextures)
+        return np.asarray(vertices), np.asarray(normals), np.asarray(faces), np.asarray(textures)
+        # return np.asarray(sortedTextures)
 
 def computeFace( vertex, normals, textures, sortedNormals, sortedTextures, hasTexture = False ):
     if hasTexture:
