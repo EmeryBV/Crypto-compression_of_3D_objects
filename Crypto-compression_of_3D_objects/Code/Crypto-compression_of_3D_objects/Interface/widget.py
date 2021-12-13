@@ -7,7 +7,8 @@ from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QApplication, QFileDialog
 
 from Interface.mainWindow import Ui_MainWindow
-from Parser import readMesh
+from Parser import readMesh, readMeshBis
+from Compression import Compression, Decompression
 from Compression import Compression, Decompression
 from random import randint
 import re
@@ -128,7 +129,7 @@ def decompression():
         decompression.decodeConnectivity()
     elif modeCompression == "Encode geometry":
         print("here")
-        vertices, faces = readMesh(decompressedMeshHuffman)
+        vertices, faces = readMeshBis(decompressedMeshHuffman)
         print(vertices)
         print(faces)
         decompression = Decompression.Decompression(decompressedMeshHuffman, filepathDestination2, keyXOR, keyShuffling, vertices,faces )
