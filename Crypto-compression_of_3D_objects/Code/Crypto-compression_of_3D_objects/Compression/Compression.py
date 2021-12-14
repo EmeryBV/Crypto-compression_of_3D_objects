@@ -1,12 +1,15 @@
+import copy
 import random
+
 import Parser
+
 from Evaluation import compressionEvaluation
 from MeshData.Vertex import Vertex
 from Compression.ActiveList import ActiveList
 from Compression.huffman import compresser,decompresser
 from Encryption import encryption
-import copy
 from bitstring import BitArray
+
 listPrediction = []
 predIsAdd = True
 class Compression:
@@ -15,7 +18,6 @@ class Compression:
         self.vertices = vertices
         self.triangles = faces
         self.filename = filename
-
 
     def getStartTriangle(self):
         # return self.triangles[random.randint(0,(len(self.triangles)-1))]
@@ -45,63 +47,75 @@ class Compression:
 
         while self.stack:
 
-            AL = self.stack.pop(len(self.stack) - 1)
+            AL = self.stack.pop()
+            if not AL.vertexList:
+                continue
             AL.nextFocus()
-
             AL.sortFocusVertexNeighbors(self.vertices, self.triangles)
 
             while AL.vertexList:
                 print("\n")
                 print("Focus vertex : ", AL.focusVertex.index )
                 print("Vertex in AL = ", [n.index for n in AL.vertexList])
+                for l in self.stack:
+                        print( "AL in stack : ",  [ v.index for v in l.vertexList], len(l.vertexList ) )
+
                 print("NEIGHBORS = ", [[n, self.vertices[n].isEncoded()] for n in AL.focusVertex.neighbors])
 
                 e = AL.nextFreeEdge()
                 if e:
-
                     u = self.vertices[AL.vertexAlongEdge(e)]
-
                     if not u.isEncoded():
                         print("Ajout du vertice " + str(u.index))
-                        listPrediction.append([AL.focusVertex,AL.vertexList[len(AL.vertexList) - 1],AL.vertexList[len(AL.vertexList) - 2], u])
 
-                        self.encodeFace(u, AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1])
-                        self.encodeVertexInFile("add", vertex=u, valence=str(u.valence))
+                        encoded = self.encodeFace(u, AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1])
+                        if encoded:
 
-                        AL.addVertex(u)
-                        traversalOrder.append(u.index)
+                            listPrediction.append([AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1],
+                                                   AL.vertexList[len(AL.vertexList) - 2], u])
+
+                            self.encodeVertexInFile("add", vertex=u, valence=str(u.valence))
+                            AL.addVertex(u)
+                            traversalOrder.append(u.index)
+                        else:
+                            AL.focusVertex.edges.remove(e)
 
                     elif AL.contains(u):
 
                         self.encodeVertexInFile("split", vertex=u, offset=str(AL.getOffset(u)))
-                        face = self.getFaces(u, AL.focusVertex, AL.vertexList[ len(AL.vertexList) -1 ])
+                        self.encodeFace(u, AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1])
 
-                        for edge in face.edges:
-                            if  u not in edge.vertices or  AL.focusVertex not in edge.vertices:
-                                continue
-                            if not edge.isEncoded():
-                                print("encode", edge.vertices)
-                                edge.encode()
+                        if AL.focusVertex.isFull():
+                            self.encodeFace(AL.focusVertex, AL.vertexList[1], u )
+
                         ALBis = AL.split(u)
 
+                        temp = AL.vertexList
+                        if len(AL.vertexList) < len(ALBis.vertexList):
+                            AL.vertexList = ALBis.vertexList
+                            ALBis.vertexList = temp
+
                         print("Split occuring on ", u.index)
-                        print("AL : ", [n.index for n in AL.vertexList])
+                        print("AL : ", [n.index for n in AL.vertexList] )
                         print("ALBIS : ", [n.index for n in ALBis.vertexList])
                         AL.nextFocus()
                         AL.sortFocusVertexNeighbors( self.vertices, self.triangles )
-
                         print("Focus vertex after split : ", AL.focusVertex.index )
 
                         self.stack.append(ALBis)
 
                     else:
+                        cpt = 0
                         for AList in self.stack:
                             if AList.contains(u):
                                 print("Vertex where u is found ", [n.index for n in AList.vertexList])
-                                self.encodeVertexInFile("merge", vertex=u, index=u.index, offset=str(AL.getOffset(u)))
+                                self.encodeVertexInFile("merge", vertex=u, offset=str(AL.getOffset(u)), index=cpt) # offset = numéro de AL
                                 AL.merge(AList, u)
+                                self.encodeFace(u, AL.focusVertex, AL.vertexList[len(AL.vertexList) - 2])
+
                                 self.stack.remove(AList)
                                 break
+                            cpt += 1
 
                 while AL.removeFullVertices( self.triangles ):
                     pass
@@ -156,11 +170,13 @@ class Compression:
 
     def encodeFace(self, v1, v2, v3):
         face = self.getFaces(v1, v2, v3)
-
+        if not face:
+            return False
         for edge in face.edges:
             if not edge.isEncoded():
                 print("encode", edge.vertices)
                 edge.encode()
+        return True
 
     def encodeVertexInFile(self, instruction, vertex, valence=None, offset=None, index=None):
         global predIsAdd
@@ -172,10 +188,12 @@ class Compression:
             else : line = " ".join([instruction, str(valence)])
             predIsAdd = True
         elif instruction == "split":
+            vertex.encode()
             line = " ".join([instruction, str(offset)])
             predIsAdd = False
         else:
-            line = " ".join([str(vertex.index), instruction, str(index), str(offset)])
+            vertex.encode()
+            line = " ".join([instruction, str(index), str(offset)])
 
         print(line)
         file.write(line + "\n")
@@ -192,6 +210,7 @@ class Compression:
                     minVertice[i] = vertex.position[i]
                 if vertex.position[i] > maxVertice[i]:
                     maxVertice[i] = vertex.position[i]
+
         return minVertice, maxVertice
 
     def getBoundingBoxNormals(self):
@@ -236,8 +255,9 @@ class Compression:
         file.write("[" + str(minNormals[0]) + ";" + str(minNormals[1]) + ";" + str(minNormals[2]) + "]\n")
         file.write("[" + str(maxNormals[0]) + ";" + str(maxNormals[1]) + ";" + str(maxNormals[2]) + "]\n")
 
-        file.write( "[" + str(minTextures[0])+";" + str(minTextures[1]) +"]\n")
-        file.write( "[" + str(maxTextures[0])+";" + str(maxTextures[1]) +"]\n")
+        if minTextures and maxTextures:
+            file.write( "[" + str(minTextures[0])+";" + str(minTextures[1]) +"]\n")
+            file.write( "[" + str(maxTextures[0])+";" + str(maxTextures[1]) +"]\n")
 
         file.write("q " + str(quantification))
 
@@ -265,7 +285,8 @@ class Compression:
         file.close()
         self.writeVertex()
         self.writeNormal()
-        self.writeTexture()
+        if minTextures and maxTextures:
+            self.writeTexture()
         listPrediction = []
         return keyXOR, keyShuffling
 

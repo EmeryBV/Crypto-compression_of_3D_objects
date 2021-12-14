@@ -1,18 +1,19 @@
-# This Python file uses the following encoding: utf-8
-import copy
-import sys
-
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import QUrl
-from PyQt5.QtWidgets import QApplication, QFileDialog
-
-from Interface.mainWindow import Ui_MainWindow
-from Parser import readMesh, readMeshBis
-from Compression import Compression, Decompression
-from Compression import Compression, Decompression
-from random import randint
 import re
 import ast
+import sys
+import copy
+
+import trimesh
+
+from random import randint
+
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QApplication, QFileDialog
+
+from Parser import readMesh, readMeshBis
+from Interface.mainWindow import Ui_MainWindow
+from Compression import Compression, Decompression
+
 ui = Ui_MainWindow()
 
 meshFile = ""
@@ -27,6 +28,7 @@ filepathDestination2 =""
 filePathCompressFile=""
 modeCompression = ""
 modeDecompression = ""
+
 def buttonSetUpCompression(ui):
     ui.browse.clicked.connect(browseFile)
     ui.browseDestinationFile.clicked.connect(browseDestinationFile)
@@ -48,17 +50,29 @@ def generateSeed():
 
 def getValueCompression():
     global meshFile,seed,quantification,modeCompression
+
     meshFile = ui.filePath.text()
+    modeCompression = ui.encodeMode.currentText()
+    seed = ui.seed.text()
+    print(meshFile)
+
+    if not meshFile.endswith(".obj") :
+        QtWidgets.QMessageBox.critical( MainWindows, "Error", "Seul les OBJ sont supportés")
+        return None
+    if not meshFile or not seed or not ui.filepathDestination.text():
+        QtWidgets.QMessageBox.critical( MainWindows, "Error", "Remplissez tous les champs")
+        return None
+
     seed = int(ui.seed.text())
     quantification = int(re.findall(r'\d+', ui.quantification.currentText())[0])
-    modeCompression = ui.encodeMode.currentText()
-
+    return True
 
 def compression():
-    getValueCompression()
+    if not getValueCompression():
+        return
 
     vertices, faces = readMesh(meshFile)
-    print(meshFile)
+
     compressedMesh = ui.filepathDestination.text()
     originalMesh = Compression.Compression(vertices, faces, compressedMesh)
     compression = copy.deepcopy(originalMesh)
@@ -77,11 +91,9 @@ def compression():
         ui.copyXOR.clicked.connect(copyKeyXOR)
 
     elif modeCompression == "Encode geometry":
-        print("Encode geometry")
         compressedMesh += ".obj"
         keyXOR, keyShuffling = compression.encodeGeometryWithoutConnectivity(seed, quantification, compressedMesh)
         compressBinary = compressedMesh.replace(".obj", "binary")
-        print(compressBinary)
         Compression.compressionHuffman(compressedMesh, compressBinary)
         ui.shufflingKey.setText(str(keyShuffling))
         ui.XORKey.setText(str(keyXOR))
@@ -96,7 +108,6 @@ def buttonSetUpDecompression(ui):
     ui.browse_2.clicked.connect(browseFilesDecompression)
     ui.execute2.clicked.connect(decompression)
     ui.browseDestinationFile_2.clicked.connect(browseDestinationFileDecompress)
-    modeCompression = ui.encodeMode.currentText()
 
 def browseDestinationFileDecompress():
     fname = QFileDialog.getSaveFileName( caption='Open file', directory="../results/interface/" ,filter=".obj",initialFilter=".obj" )
@@ -106,34 +117,39 @@ def browseFilesDecompression():
     fname = QFileDialog.getOpenFileName( caption='Open file',directory="../results/interface/")
     ui.filePathCompressFile.setText(fname[0])
 
-
 def getValueDecompression():
     global keyXOR,keyShuffling,filepathDestination2, filePathCompressFile, modeDecompression
     filePathCompressFile = ui.filePathCompressFile.text()
     filepathDestination2 = ui.filepathDestination_2.text()
+
     keyXOR = ui.XORKeyDecrypt.text()
-    print(len(keyXOR))
-    keyXOR = ast.literal_eval(keyXOR)
-    print(keyXOR)
-    print(keyXOR[0][0])
     keyShuffling= ui.shufflingKeyDecrypt.text()
+    modeDecompression = ui.decodeMode.currentText()
+
+    if not filepathDestination2 or not filePathCompressFile or not keyShuffling or not keyXOR:
+        QtWidgets.QMessageBox.critical(MainWindows, "Error", "Remplissez tous les champs")
+        return None
+
+    keyXOR = ast.literal_eval(keyXOR)
+
     keyShuffling = ast.literal_eval(keyShuffling)
+    return True
 
 def decompression():
-    getValueDecompression()
+    if not getValueDecompression():
+        return
     decompressedMeshHuffman = "decompressedMeshHuffman"
     Decompression.decompressionHuffman(filePathCompressFile, decompressedMeshHuffman)
-
-    if modeCompression == "Encode connectivity + geometry":
+    if modeDecompression == "Decode connectivity + geometry":
         decompression = Decompression.Decompression(decompressedMeshHuffman, filepathDestination2, keyXOR, keyShuffling)
         decompression.decodeConnectivity()
-    elif modeCompression == "Encode geometry":
-        print("here")
+    elif modeDecompression == "Decode geometry":
         vertices, faces = readMeshBis(decompressedMeshHuffman)
-        print(vertices)
-        print(faces)
         decompression = Decompression.Decompression(decompressedMeshHuffman, filepathDestination2, keyXOR, keyShuffling, vertices,faces )
         decompression.decodeGeometryNotSinceConnectivity()
+
+    mesh = trimesh.load( filepathDestination2 )
+    mesh.show(flags={'wireframe': True})
 
 def copyKeyShuffling():
     ui.shufflingKey.selectAll()
@@ -147,7 +163,9 @@ def copyKeyXOR():
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    global MainWindows
     MainWindows = QtWidgets.QMainWindow()
+
     ui.setupUi(MainWindows)
     buttonSetUpCompression(ui)
     buttonSetUpDecompression(ui)

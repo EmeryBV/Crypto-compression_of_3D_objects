@@ -60,7 +60,7 @@ class Decompression:
         command = file.readline()
 
         while self.stack:
-            AL = self.stack.pop(len(self.stack) - 1)
+            AL = self.stack.pop()
             AL.focusVertex = vertex1
 
             while AL.vertexList or "order" not in command:
@@ -69,7 +69,7 @@ class Decompression:
                 print("FOCUS VERTEX = ", AL.focusVertex.index, AL.focusVertex.valence, len(AL.focusVertex.edges))
                 if "add" in command or int(command)!=None:
                     print("AJOUT DE " + str(i))
-                    print("ACTIVE LIST", [n.index for n in AL.vertexList])
+                    print("ACTIVE LIST", [[n.index, n.valence, len( n.edges )] for n in AL.vertexList])
 
                     newVertex = Vertex(i, position=[], neighbors=[], edges=[], valence=convertToInt(command))
                     listPrediction.append([AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1],
@@ -86,14 +86,23 @@ class Decompression:
                         command = file.readline()
 
                 elif "split" in command:
-                    # print([o.index for o in AL.vertexList])
 
                     ALBis, splitVertex = AL.splitDecompression(convertToInt(command))
                     print("Split vertex : ", str(splitVertex.index))
-                    AL.makeConnectivity(AL.focusVertex, splitVertex,
-                                        append=False)  # connect previous focus with splitvertex
+                    AL.makeConnectivity(AL.focusVertex, splitVertex, append = False )  # connect previous focus with splitvertex
+
+                    if AL.focusVertex.isFull():
+                        AL.encodeFace2(AL.focusVertex, AL.vertexList[1],
+                                         splitVertex)
+
                     listPrediction.append([AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1],
                                            AL.vertexList[len(AL.vertexList) - 2]])
+
+
+                    temp = AL.vertexList
+                    if len(AL.vertexList) < len(ALBis.vertexList):
+                        AL.vertexList = ALBis.vertexList
+                        ALBis.vertexList = temp
 
                     AL.nextFocus()
                     print("FOCUS: Voisin= ", [n.index for n in AL.focusVertex.neighbors])
@@ -102,8 +111,16 @@ class Decompression:
                           [o.index for o in ALBis.vertexList])
 
                     self.stack.append(ALBis)
-                    for l in self.stack:
-                        print("AL in stack : ", [v.index for v in l.vertexList])
+
+                    if "order" not in command:
+                        command = file.readline()
+
+                elif "merge" in command:
+                    args = convertToListInt(command)
+                    print( args )
+
+                    AL.mergeDecompression( self.stack.pop(int(args[0])), int(args[1]) )
+                    AL.makeConnectivity(AL.focusVertex, AL.vertexList[int(args[1])], append = False )
 
                     if "order" not in command:
                         command = file.readline()
@@ -111,7 +128,10 @@ class Decompression:
                 while AL.removeFullVerticesValence():
                     pass
 
-                print("AL : ", [o.index for o in AL.vertexList])
+                print("AL : ", [o.index for o in AL.vertexList], len(AL.vertexList ))
+                for l in self.stack:
+                        print( "AL in stack : ",  [ v.index for v in l.vertexList], len(l.vertexList ) )
+
                 if AL.vertexList:
                     if AL.focusVertex.isValenceFull():
                         AL.nextFocus()

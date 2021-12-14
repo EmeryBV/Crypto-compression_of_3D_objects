@@ -22,38 +22,23 @@ class ActiveList:
                 self.vertexList = self.vertexList[i:]
                 break
 
-        temp = self.vertexList
-        if len(self.vertexList) < len(ALBis.vertexList):
-            self.vertexList = ALBis.vertexList
-            ALBis.vertexList = temp
-        return ALBis
-
-    def splitDecompression(self, vertex , offset):
-        ALBis = None
-        for i in range(0, offset):
-            if vertex == self.vertexList[i]:
-                ALBis = ActiveList(self.vertexList[0:i + 1])
-                self.vertexList = self.vertexList[i:]
-                break
-
-        temp = self.vertexList
-        if len(self.vertexList) < len(ALBis.vertexList):
-            self.vertexList = ALBis.vertexList
-            ALBis.vertexList = temp
+        # temp = self.vertexList
+        # if len(self.vertexList) < len(ALBis.vertexList):
+        #     self.vertexList = ALBis.vertexList
+        #     ALBis.vertexList = temp
 
         return ALBis
 
     def splitDecompression(self, offset ):
-        splitVertex = self.vertexList[offset-1]
-        ALBis = ActiveList(self.vertexList[0: offset ])
-        self.vertexList = self.vertexList[offset-1:]
-
-        temp  = self.vertexList
-        if len(self.vertexList) < len(ALBis.vertexList):
-            self.vertexList = ALBis.vertexList
-            ALBis.vertexList = temp
+        splitVertex = self.vertexList[offset]
+        ALBis = ActiveList(self.vertexList[0:offset + 1])
+        self.vertexList = self.vertexList[offset:]
 
         return ALBis, splitVertex
+
+    def mergeDecompression(self, AList, offset):
+        self.vertexList = self.vertexList + AList.vertexList[offset:] + AList.vertexList[0:offset]
+        print("Vertex in AL Merge =", [n.index for n in self.vertexList])
 
     def getOffset(self, vertex):
         result = 0
@@ -73,12 +58,9 @@ class ActiveList:
     def merge(self, AL1, vertex):
         for i in range(len(AL1.vertexList)):
             if AL1.vertexList[i] == vertex:
-                for y in range(0, len(self.vertexList)):
-                    AL1.vertexList.insert(i + y + 1, self.vertexList[
-                        y])  # On ne veut pas copier 2 fois vertex dans la nouvelle liste
+                self.vertexList = self.vertexList + AL1.vertexList[i:] + AL1.vertexList[0:i+1]
                 break
-        self.vertexList = AL1.vertexList
-        print("Vertex in AL Merge =", [n.index for n in AL1.vertexList])
+        print("Vertex in AL Merge =", [n.index for n in self.vertexList])
 
     def removeFullVertices(self, triangles):
         print("\n")
@@ -88,21 +70,23 @@ class ActiveList:
             if vertex.isFull():
                 bool = True
                 print("deleting : ", vertex.index)
-                if vertex == self.focusVertex:
-                    self.encodeFace(self.focusVertex, self.vertexList[1], self.vertexList[len(self.vertexList) - 1], triangles)
-                else:
-                    if vertex == self.vertexList[len(self.vertexList) - 1]:
-                        self.encodeFace(self.vertexList[0], self.vertexList[len(self.vertexList) - 2], vertex, triangles)
+                if len(self.vertexList) > 2:
+                    if vertex == self.focusVertex:
+                        self.encodeFace(self.focusVertex, self.vertexList[1], self.vertexList[len(self.vertexList) - 1], triangles)
                     else:
-                        index = self.vertexList.index( vertex )
-                        self.encodeFace( self.vertexList[index - 1], self.vertexList[index],self.vertexList[index + 1], triangles )
-                print("deleting vertex ", vertex.index )
+                        if vertex == self.vertexList[len(self.vertexList) - 1]:
+                            self.encodeFace(self.vertexList[0], self.vertexList[len(self.vertexList) - 2], vertex, triangles)
+                        else:
+                            index = self.vertexList.index( vertex )
+                            self.encodeFace( self.vertexList[index - 1], self.vertexList[index],self.vertexList[index + 1], triangles )
+                    print("deleting vertex ", vertex.index )
                 self.vertexList.remove(vertex)
         return bool
 
     def encodeFace(self, v1, v2, v3, triangles ):
         face = self.getFaces(v1, v2, v3, triangles)
-
+        if not face:
+            return
         for edge in face.edges:
             if not edge.isEncoded():
                 print("encode", edge.vertices)
@@ -110,35 +94,38 @@ class ActiveList:
 
     def getFaces(self, v1, v2, v3, triangles):
         for face in triangles:
-            if face.composedOf(v1, v2, v3):
+            if v1 != v2 and v1 != v3 and v2 != v3 and face.composedOf(v1, v2, v3):
+                print( v1.index, v2.index, v3.index)
+                print( [ e.vertices for e in  face.edges ]  )
                 return face
         print( "No face found between" ,v1.index, v2.index, v3.index)
         return None
 
     def sortFocusVertexNeighbors(self, allVertices, allTriangles ):
         predecessor = self.vertexList[ len(self.vertexList) -1 ]
-        for i in range( len(self.focusVertex.neighbors ) ):
+        for i in range(0, len(self.focusVertex.neighbors ) ):
             neighbor = allVertices[ self.focusVertex.neighbors[i] ]
             if neighbor == predecessor:
                 self.focusVertex.neighbors = self.focusVertex.neighbors[i:] + self.focusVertex.neighbors[0:i]
                 self.focusVertex.edges = self.focusVertex.edges[i:] + self.focusVertex.edges[0:i]
+
         print( "Before sort ", self.focusVertex.neighbors)
-        print( "Before sort ", [e.vertices for e in self.focusVertex.edges])
-        for i in range( len( self.focusVertex.neighbors ) ):
+        print( "Before sort ", [[e.vertices, e.isEncoded()] for e in self.focusVertex.edges])
+
+        for i in range(0, len( self.focusVertex.neighbors ) ):
             neighbor = allVertices[ self.focusVertex.neighbors[i] ]
-            if not neighbor.isEncoded() and self.getFaces( self.focusVertex, neighbor, predecessor, allTriangles ):
+            if self.getFaces( self.focusVertex, neighbor, predecessor, allTriangles ) :
                 self.focusVertex.neighbors = self.focusVertex.neighbors[i:] + self.focusVertex.neighbors[0:i]
                 self.focusVertex.edges = self.focusVertex.edges[i:] + self.focusVertex.edges[0:i]
                 break
+
         print( "After sort ", self.focusVertex.neighbors)
-        print( "After sort ",  [e.vertices for e in self.focusVertex.edges])
+        print( "After sort ",  [[e.vertices, e.isEncoded()] for e in self.focusVertex.edges])
 
     def nextFreeEdge(self):
         print("EDGE de focus = ", [[n.vertices, n.isEncoded()] for n in self.focusVertex.edges])
         for edge in self.focusVertex.edges:
             if not edge.isEncoded():
-                edge.encode()
-                print("encode", edge.vertices)
                 return edge
 
         print("nextFreeEdge return None")
@@ -163,8 +150,9 @@ class ActiveList:
 
         vertex.addNeighbors([newVertex])
         vertex.addEdge([newVertex])
+        print("edges ", [e.vertices for e in newVertex.edges])
+
         if append:
-            print("edges ", [e.vertices for e in newVertex.edges])
             self.vertexList.append(newVertex)
 
     def encodeFace2(self, v1, v2, v3):
@@ -195,5 +183,5 @@ class ActiveList:
                         self.encodeFace2( self.vertexList[index-1],  self.vertexList[index], self.vertexList[index+1])
 
                 self.vertexList.remove(vertex)
-
+                print( "deleting", vertex.index )
         return bool

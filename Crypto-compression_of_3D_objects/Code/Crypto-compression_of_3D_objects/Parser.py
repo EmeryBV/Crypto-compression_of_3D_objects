@@ -1,7 +1,4 @@
-import open3d.cpu.pybind.geometry
-
 import objParser
-import pprint
 import trimesh
 import open3d as o3d
 import numpy as np
@@ -13,12 +10,10 @@ from MeshData.Vertex import Vertex
 import sys
 import numpy
 
-numpy.set_printoptions(threshold=sys.maxsize)
-
-
 def radial_sort(points,
                 origin,
                 normal):
+
     # create two axis perpendicular to each other and the normal,
     # and project the points onto them
     axis0 = [normal[0], normal[2], -normal[1]]
@@ -33,31 +28,27 @@ def radial_sort(points,
     # return the points sorted by angle
     return np.argsort(angles)
 
-
 def project(planeVertex, planeNormal, vertex):
     vec = np.subtract(vertex, planeVertex)
     return np.subtract(vertex, np.dot(vec, planeNormal) * planeNormal)
 
-
 def sortNeighbors2(vertices, normals, neighbors):
-    sortedNeighbors = {}
+    sortedNeighbors =  {}
     for i in range(0, len(vertices)):
         projectedPoints = []
         for n in neighbors[i]:
-            projectedPoints.append(project(vertices[i], normals[i], vertices[n]))
+            projectedPoints.append( project( vertices[i], normals[i], vertices[n] ) )
         vec = projectedPoints[0] - vertices[i]
         a = {}
-        a[list(neighbors[i])[0]] = 0.
+        a[ list(neighbors[i])[0] ] = 0.
         for j in range(1, len(neighbors[i])):
-            n = list(neighbors[i])[j]
-            vec2 = projectedPoints[j] - vertices[i]
-            cross = np.cross(vec, vec2)
-            crossL = np.linalg.norm(cross)
-            angle = np.math.atan2(np.dot(cross, normals[i]), np.dot(vec, vec2))
+            n = list( neighbors[i] )[j]
+            vec2 = vertices[n] - vertices[i]
+            cross = np.cross( vec, vec2)
+            angle = np.math.atan2( np.dot( cross,normals[i] )  , np.dot(vec, vec2) )
             a[n] = angle * 180. / np.pi
-            if a[n] < 0.:
+            if a[n] < 0. :
                 a[n] += 360.
-
         ordered_dic = OrderedDict(sorted(a.items(), key=lambda t: t[1]))
         sortedNeighbors[i] = ordered_dic
 
@@ -66,6 +57,62 @@ def sortNeighbors2(vertices, normals, neighbors):
         final.append(list(sortedN[1].keys()))
 
     return final
+
+def getFaces( triangles, v1, v2, v3):
+    for face in triangles:
+        if face.composedOf(v1, v2, v3):
+            return face
+
+
+def sortNeighborsPleaseWork( vertices, faces ):
+    for vertex in vertices:
+        orientations = {}
+        vertexNeighbors = vertex.neighbors
+        for j in range(0, len(vertexNeighbors[:])):
+            neighborsCopy = vertexNeighbors.copy()
+            neighborsCopy = neighborsCopy[j:] + neighborsCopy[0:j]
+            final = [ neighborsCopy.pop( 0 ) ]
+            while neighborsCopy:
+                for i in range(0, len(neighborsCopy[:])):
+                    if getFaces( faces, vertices[neighborsCopy[i]], vertex, vertices[final[len(final)-1]] ):
+                        final.append(neighborsCopy.pop( i ))
+                        break
+                    else:
+                        if getFaces(faces, vertices[neighborsCopy[len(neighborsCopy)-1]], vertex, vertices[final[len(final) - 1]]):
+                            final.append(neighborsCopy.pop(len(neighborsCopy)-1))
+                            break
+
+            orientations[j] = final
+
+        vertex.neighbors =  getOrientation( orientations )
+
+
+def getOrientation( orientations ):
+
+    baseOrientation = orientations[0]
+    vertexBase = baseOrientation[0]
+    countOrientations = { repr( baseOrientation ) : 1 }
+    for key,value in orientations.items():
+        orientation = value
+        for i in range( 0, len( value ) ):
+            if orientation[i] == vertexBase:
+                orientations[key] = orientation[i:] + orientation[0:i]
+
+    for orientation in list( orientations.values() ):
+        if repr( orientation ) in countOrientations.keys():
+            countOrientations[repr(orientation)] += 1
+        else:
+            countOrientations[repr(orientation)] = 1
+
+    ordered_dic = OrderedDict(sorted(countOrientations.items(), key=lambda t: t[1], reverse=True))
+    l = []
+
+
+    for i in list(ordered_dic.keys())[0][1:-1].split(","):
+        if i.replace(' ', '').isdigit():
+            l.append( int(i) )
+
+    return l
 
 def readMeshBis(file):
     vertices, normal , faces,texture = objParser.parseOBJ(file)
@@ -88,11 +135,12 @@ def readMeshBis(file):
 
     return listVertices, listFace
 
-def readMesh(file, mode= 0):
+def readMesh(file):
     mesh = o3d.io.read_triangle_mesh(file)
 
     mesh.remove_duplicated_vertices()
     mesh.compute_vertex_normals()
+    mesh.remove_unreferenced_vertices()
 
     meshVertices = (np.asarray(mesh.vertices))
     meshTriangles = (np.asarray(mesh.triangles))
@@ -141,21 +189,37 @@ def readMesh(file, mode= 0):
         edges = []
         face = meshTriangles[i]
         if (face[0], face[1]) in allEdges.keys():
-            edges.append(allEdges[(face[0], face[1])])
+            edges.append( allEdges[(face[0], face[1])] )
         else:
-            edges.append(allEdges[(face[1], face[0])])
+            edges.append( allEdges[(face[1], face[0])] )
 
         if (face[0], face[2]) in allEdges.keys():
-            edges.append(allEdges[(face[0], face[2])])
+            edges.append( allEdges[(face[0], face[2])] )
         else:
-            edges.append(allEdges[(face[2], face[0])])
+            edges.append( allEdges[(face[2], face[0])] )
 
         if (face[1], face[2]) in allEdges.keys():
-            edges.append(allEdges[(face[1], face[2])])
+            edges.append( allEdges[(face[1], face[2])] )
         else:
-            edges.append(allEdges[(face[2], face[1])])
+            edges.append( allEdges[(face[2], face[1])] )
 
         faces.append(Face([vertices[face[0]], vertices[face[1]], vertices[face[2]]], edges))
+
+    sortNeighborsPleaseWork( vertices, faces )
+    for i in range(0, len(meshVertices)):
+        vertex = vertices[i]
+        vertexNeighbors = vertex.neighbors
+        edges = []
+        for n in vertexNeighbors:
+            if (i, n) in allEdges.keys():
+                edges.append(allEdges[(i, n)])
+            elif (n, i) in allEdges.keys():
+                edges.append(allEdges[(n, i)])
+            else:
+                allEdges[(i, n)] = Edge([i, n])
+                edges.append(allEdges[(i, n)])
+
+        vertex.edges = edges
 
     return vertices, faces
 
@@ -170,8 +234,8 @@ def writeMesh(listVertice, faces, filename, precision):
     for vertex in listVertice:
         listPosition.append(vertex.position)
         listNormal.append(vertex.normal)
-    vertice = open3d.utility.Vector3dVector(listPosition)
-    normals = open3d.utility.Vector3dVector(listNormal)
+    vertice = o3d.utility.Vector3dVector(listPosition)
+    normals = o3d.utility.Vector3dVector(listNormal)
     dico = []
     for triangle in faces:
         listListIndex = []
@@ -184,7 +248,7 @@ def writeMesh(listVertice, faces, filename, precision):
 
 
         listIndex.append(listListIndex)
-    indexTriangle = open3d.utility.Vector3iVector(listIndex)
+    indexTriangle = o3d.utility.Vector3iVector(listIndex)
     mesh = trimesh.Trimesh(listPosition, listIndex, process=False, vertex_normals=listNormal, maintain_order=True)
 
     if listTexture[0] is not None:

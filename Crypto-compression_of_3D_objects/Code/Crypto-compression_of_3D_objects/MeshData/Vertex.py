@@ -53,8 +53,6 @@ class Vertex:
         return None
 
     def haveOneFreeEdge(self):
-        # print(int(self.valence) )
-        # print(len(self.neighbors)+1 )
         if int(self.valence) == len(self.neighbors) + 1:
             return True
         return False
@@ -73,5 +71,6 @@ class Vertex:
                     containEdge = True
                     break
             if not containEdge:
-                self.edges.append(Edge([self.index, vertex.index]))
-                vertex.edges.append(Edge([vertex.index, self.index]))
+                addedEdge = Edge([self.index, vertex.index])
+                self.edges.append( addedEdge )
+                vertex.edges.append(addedEdge)

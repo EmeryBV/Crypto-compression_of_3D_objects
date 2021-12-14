@@ -22,21 +22,21 @@ if __name__ == '__main__':
 
 
     file = create_compress_file(compressedMesh)
-    # file.write("test.obj")
-    meshFile = "./Mesh/OBJ/sphereSub4.obj"
+
+    meshFile = "./Mesh/OBJ/bunnyLOD3.obj"
     seed = 2563
-    quantification = 8
+    quantification = 512
     vertices, faces = readMesh(meshFile)
     originalMesh = Compression.Compression(vertices, faces, compressedMesh)
     compression = copy.deepcopy(originalMesh)
 
     print("//////////////////////COMPRESSION//////////////////////")
-    # compression.encodeConnectivity()
-    # keyXOR, keyShuffling = compression.encodeGeometrySinceConnectivity(seed, quantification)
-    # Compression.compressionHuffman(compressedMesh, compressedMeshHuffman)
+    compression.encodeConnectivity()
+    keyXOR, keyShuffling = compression.encodeGeometrySinceConnectivity(seed, quantification)
+    Compression.compressionHuffman(compressedMesh, compressedMeshHuffman)
 
-    keyXOR, keyShuffling = compression.encodeGeometryWithoutConnectivity(seed, quantification, compressedMeshwithoutConnectivty)
-    Compression.compressionHuffman(compressedMeshwithoutConnectivty, compressedMeshHuffmanWithoutConnectivity)
+    # keyXOR, keyShuffling = compression.encodeGeometryWithoutConnectivity(seed, quantification, compressedMeshwithoutConnectivty)
+    # Compression.compressionHuffman(compressedMeshwithoutConnectivty, compressedMeshHuffmanWithoutConnectivity)
 
 
     print("//////////////////////DECOMPRESSION//////////////////////")
@@ -45,18 +45,18 @@ if __name__ == '__main__':
     # decompression = Decompression.Decompression(decompressedMeshHuffman, decompressedMesh, keyXOR, keyShuffling)
     # decompression.decodeConnectivity()
 
-    Decompression.decompressionHuffman(compressedMeshHuffmanWithoutConnectivity, decompressedMeshHuffmanWithoutConnectivity)
-    print(decompressedMeshHuffmanWithoutConnectivity)
-    vertices, faces = readMeshBis(decompressedMeshHuffmanWithoutConnectivity)
-    decompression = Decompression.Decompression(decompressedMeshHuffmanWithoutConnectivity,
-                                                decompressedMeshWithoutConnectivity, keyXOR, keyShuffling,vertices,faces)
+    # Decompression.decompressionHuffman(compressedMeshHuffmanWithoutConnectivity, decompressedMeshHuffmanWithoutConnectivity)
+    # print(decompressedMeshHuffmanWithoutConnectivity)
+    # vertices, faces = readMeshBis(decompressedMeshHuffmanWithoutConnectivity)
+    # decompression = Decompression.Decompression(decompressedMeshHuffmanWithoutConnectivity,
+    #                                             decompressedMeshWithoutConnectivity, keyXOR, keyShuffling,vertices,faces)
 
-    decompression.decodeGeometryNotSinceConnectivity()
+    # decompression.decodeGeometryNotSinceConnectivity()
 
 
-    print("//////////////////////HAUSDORF//////////////////////")
-    hausdorffDistance = compressionEvaluation.HausdorffDistance(originalMesh.vertices, decompression.vertices)
-    print("HAUSDORFF distance: " + str(hausdorffDistance))
+    # print("//////////////////////HAUSDORF//////////////////////")
+    # hausdorffDistance = compressionEvaluation.HausdorffDistance(originalMesh.vertices, decompression.vertices)
+    # print("HAUSDORFF distance: " + str(hausdorffDistance))
 
     print("//////////////////////ENCRYPTION//////////////////////")
     # print("keyXor = " , keyXOR)
