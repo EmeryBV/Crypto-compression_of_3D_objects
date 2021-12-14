@@ -3,15 +3,17 @@ import random
 
 import Parser
 
-from Evaluation import compressionEvaluation
 from MeshData.Vertex import Vertex
-from Compression.ActiveList import ActiveList
-from Compression.huffman import compresser,decompresser
+
 from Encryption import encryption
-from bitstring import BitArray
+from Evaluation import compressionEvaluation
+
+from Compression.huffman import compresser
+from Compression.ActiveList import ActiveList
 
 listPrediction = []
 predIsAdd = True
+
 class Compression:
     def __init__(self, vertices, faces, filename):
         self.stack = []

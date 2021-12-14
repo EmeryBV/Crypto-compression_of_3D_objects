@@ -67,7 +67,7 @@ class Decompression:
 
                 print("command ", i + 1, " ", command)
                 print("FOCUS VERTEX = ", AL.focusVertex.index, AL.focusVertex.valence, len(AL.focusVertex.edges))
-                if "add" in command or int(command)!=None:
+                if "add " in command or command.replace("\n", "").isdigit():
                     print("AJOUT DE " + str(i))
                     print("ACTIVE LIST", [[n.index, n.valence, len( n.edges )] for n in AL.vertexList])
 
@@ -86,10 +86,11 @@ class Decompression:
                         command = file.readline()
 
                 elif "split" in command:
+                    offset = convertToInt(command)
+                    AL.makeConnectivity(AL.focusVertex, AL.vertexList[offset], append = False )  # connect previous focus with splitvertex
 
-                    ALBis, splitVertex = AL.splitDecompression(convertToInt(command))
+                    ALBis, splitVertex = AL.splitDecompression(offset)
                     print("Split vertex : ", str(splitVertex.index))
-                    AL.makeConnectivity(AL.focusVertex, splitVertex, append = False )  # connect previous focus with splitvertex
 
                     if AL.focusVertex.isFull():
                         AL.encodeFace2(AL.focusVertex, AL.vertexList[1],
@@ -97,7 +98,6 @@ class Decompression:
 
                     listPrediction.append([AL.focusVertex, AL.vertexList[len(AL.vertexList) - 1],
                                            AL.vertexList[len(AL.vertexList) - 2]])
-
 
                     temp = AL.vertexList
                     if len(AL.vertexList) < len(ALBis.vertexList):
@@ -117,7 +117,6 @@ class Decompression:
 
                 elif "merge" in command:
                     args = convertToListInt(command)
-                    print( args )
 
                     AL.mergeDecompression( self.stack.pop(int(args[0])), int(args[1]) )
                     AL.makeConnectivity(AL.focusVertex, AL.vertexList[int(args[1])], append = False )
@@ -128,9 +127,9 @@ class Decompression:
                 while AL.removeFullVerticesValence():
                     pass
 
-                print("AL : ", [o.index for o in AL.vertexList], len(AL.vertexList ))
+                print("AL : ", [[o.index, len(o.edges), o.valence] for o in AL.vertexList], len(AL.vertexList ))
                 for l in self.stack:
-                        print( "AL in stack : ",  [ v.index for v in l.vertexList], len(l.vertexList ) )
+                        print( "AL in stack : ",  [ [o.index, len(o.edges), o.valence] for o in l.vertexList], len(l.vertexList ) )
 
                 if AL.vertexList:
                     if AL.focusVertex.isValenceFull():

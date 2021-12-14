@@ -22,18 +22,14 @@ class ActiveList:
                 self.vertexList = self.vertexList[i:]
                 break
 
-        # temp = self.vertexList
-        # if len(self.vertexList) < len(ALBis.vertexList):
-        #     self.vertexList = ALBis.vertexList
-        #     ALBis.vertexList = temp
+
 
         return ALBis
 
     def splitDecompression(self, offset ):
         splitVertex = self.vertexList[offset]
-        ALBis = ActiveList(self.vertexList[0:offset + 1])
-        self.vertexList = self.vertexList[offset:]
-
+        ALBis = ActiveList( self.vertexList[offset:])
+        self.vertexList = self.vertexList[0:offset + 1]
         return ALBis, splitVertex
 
     def mergeDecompression(self, AList, offset):

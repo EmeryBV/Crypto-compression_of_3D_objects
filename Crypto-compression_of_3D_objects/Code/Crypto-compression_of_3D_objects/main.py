@@ -40,23 +40,21 @@ if __name__ == '__main__':
 
 
     print("//////////////////////DECOMPRESSION//////////////////////")
-    # Decompression.decompressionHuffman(compressedMeshHuffman, decompressedMeshHuffman)
-    # vertices, faces = readMesh(decompressedMeshHuffman)
-    # decompression = Decompression.Decompression(decompressedMeshHuffman, decompressedMesh, keyXOR, keyShuffling)
-    # decompression.decodeConnectivity()
+    Decompression.decompressionHuffman(compressedMeshHuffman, decompressedMeshHuffman)
+    vertices, faces = readMesh(decompressedMeshHuffman)
+    decompression = Decompression.Decompression(decompressedMeshHuffman, decompressedMesh, keyXOR, keyShuffling)
+    decompression.decodeConnectivity()
 
     # Decompression.decompressionHuffman(compressedMeshHuffmanWithoutConnectivity, decompressedMeshHuffmanWithoutConnectivity)
     # print(decompressedMeshHuffmanWithoutConnectivity)
     # vertices, faces = readMeshBis(decompressedMeshHuffmanWithoutConnectivity)
     # decompression = Decompression.Decompression(decompressedMeshHuffmanWithoutConnectivity,
     #                                             decompressedMeshWithoutConnectivity, keyXOR, keyShuffling,vertices,faces)
-
     # decompression.decodeGeometryNotSinceConnectivity()
 
-
-    # print("//////////////////////HAUSDORF//////////////////////")
-    # hausdorffDistance = compressionEvaluation.HausdorffDistance(originalMesh.vertices, decompression.vertices)
-    # print("HAUSDORFF distance: " + str(hausdorffDistance))
+    print("//////////////////////HAUSDORF//////////////////////")
+    hausdorffDistance = compressionEvaluation.HausdorffDistance(originalMesh.vertices, decompression.vertices)
+    print("HAUSDORFF distance: " + str(hausdorffDistance))
 
     print("//////////////////////ENCRYPTION//////////////////////")
     # print("keyXor = " , keyXOR)
